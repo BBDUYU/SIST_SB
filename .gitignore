@@ -1,0 +1,11 @@
+### Spring Boot ###
+# 모든 설정 파일 제외
+src/main/resources/application.properties
+src/main/resources/application.yml
+
+# 특정 환경용 설정 파일들도 제외 (있을 경우)
+src/main/resources/application-*.properties
+src/main/resources/application-*.yml
+
+# 로컬 개인 설정 파일
+.env
