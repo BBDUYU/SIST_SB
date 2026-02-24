@@ -20,6 +20,7 @@ public class Complex {
     private String address;
     private Double latitude;
     private Double longitude;
+    private String type;
     @Column(columnDefinition = "TEXT")
     private String description;
     private LocalDateTime createdAt;
