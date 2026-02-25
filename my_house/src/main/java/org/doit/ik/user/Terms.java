@@ -1,23 +1,33 @@
 package org.doit.ik.user;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@Table(
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"termsCode"})
+    }
+)
 public class Terms {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long termsId;
+
+    @Column(nullable = false, unique = true)
+    private String termsCode; 
     
-    private String termsCode;
+
+    @Column(nullable = false)
     private String termsName;
-    
-    @Column(columnDefinition = "CHAR(1)")
-    private String isRequired; // 'Y' or 'N'
+
+    @Column(nullable = false, columnDefinition = "CHAR(1)")
+    private String isRequired; 
+
+    @Column(columnDefinition = "TEXT")
+    private String content; 
 }
