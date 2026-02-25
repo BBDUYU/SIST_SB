@@ -1,0 +1,45 @@
+<nav class="navbar navbar-expand-lg main-navbar" th:fragment="header"
+     xmlns:th="http://www.thymeleaf.org">
+  <div class="container px-1">
+    <a class="navbar-brand d-flex align-items-center" th:href="@{/main}">
+      <img th:src="@{/image/logo.png}" alt="내집마련로고" height="50">
+    </a>
+
+    <div class="collapse navbar-collapse justify-content-end">
+      <ul class="navbar-nav align-items-center nav-gap">
+
+        <li class="nav-item">
+          <a class="nav-link text-white" href="#">위시리스트</a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white"
+             href="#"
+             data-bs-toggle="dropdown">게시판</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#">공지사항</a></li>
+            <li><a class="dropdown-item" href="#">자유게시판</a></li>
+            <li><a class="dropdown-item" href="#">Q&A</a></li>
+          </ul>
+        </li>
+
+        <!-- 로그인 전 -->
+        <li class="nav-item" th:if="${isLogin == false}">
+          <a class="btn btn-login-pill" href="/member/login">로그인</a>
+        </li>
+        <li class="nav-item" th:if="${isLogin == false}">
+          <a class="nav-link text-white" href="/member/signup">회원가입</a>
+        </li>
+
+        <!-- 로그인 후 -->
+        <li class="nav-item" th:if="${isLogin == true}">
+          <a class="nav-link text-white" href="/member/logout">로그아웃</a>
+        </li>
+        <li class="nav-item" th:if="${isLogin == true}">
+          <a class="nav-link text-white" href="/mypage">마이페이지</a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>
