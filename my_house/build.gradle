@@ -50,6 +50,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     
     implementation 'org.json:json:20231013'
+    implementation 'com.opencsv:opencsv:5.9'
 }
 
 tasks.named('test') {

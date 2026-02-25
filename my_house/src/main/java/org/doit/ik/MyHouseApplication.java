@@ -35,4 +35,17 @@ public class MyHouseApplication {
 	    };
 	}
 	*/
+	/*
+	@Bean
+    CommandLineRunner importCctv(org.doit.ik.api.CctvImportService service) {
+        return args -> {
+            String filePath = "C:\\Class\\cctv_data.csv"; // 💡 1번 방식 (절대 경로)
+            System.out.println(">>>> CCTV 데이터 임포트 시작: " + filePath);
+            
+            service.importCctvCsv(filePath);
+            
+            System.out.println(">>>> CCTV 데이터 임포트 완료!");
+        };
+    }
+	*/
 }
