@@ -190,3 +190,8 @@ body{ background:var(--bg); }
     transition:none !important;
   }
 }
+
+
+html {
+  overflow-y: scroll;
+}
