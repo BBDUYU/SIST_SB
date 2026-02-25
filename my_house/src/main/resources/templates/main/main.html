@@ -109,13 +109,17 @@
 		    <div id="map" class="map-container"></div>
 		
 		    <div class="fab-stack">
-		        <button class="btn btn-light fab">
-		            <i class="bi bi-bell"></i>
-		        </button>
-		        <button class="btn btn-light fab">
-		            <i class="bi bi-crosshair"></i>
-		        </button>
-		    </div>
+			  <!-- 알림(종) -->
+			  <button class="btn btn-light fab fab-noti" type="button" aria-label="알림">
+			    <i class="bi bi-bell"></i>
+			    <span class="noti-dot" aria-hidden="true"></span>
+			  </button>
+			
+			  <!-- 최근 본/기록(시계) -->
+			  <button class="btn btn-light fab" type="button" aria-label="최근 기록">
+			    <i class="bi bi-clock"></i>
+			  </button>
+			</div>
 		</section>
 
     </div>

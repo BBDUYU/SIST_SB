@@ -41,3 +41,6 @@ document.addEventListener("DOMContentLoaded", function () {
     marker.setMap(map);
 
 });
+
+document.querySelector('.fab-noti')?.classList.add('has-noti');   // 점 켜기
+// document.querySelector('.fab-noti')?.classList.remove('has-noti'); // 점 끄기
