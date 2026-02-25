@@ -545,7 +545,7 @@ body {
     flex-shrink: 0;
 }
 
-/* 문의 리스트 */
+/* 문의 리스트임 */
 .inquiry-list {
     display: flex;
     flex-direction: column;

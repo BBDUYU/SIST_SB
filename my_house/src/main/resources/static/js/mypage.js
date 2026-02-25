@@ -178,7 +178,7 @@ function loadRecentProperties() {
 }
 
 /* -------------------------
-   리뷰 리스트 샘플
+   리뷰 리스트 샘플임
 ------------------------- */
 function loadReviewData() {
   const reviewList = document.querySelector('.review-list');
