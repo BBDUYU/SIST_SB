@@ -111,3 +111,58 @@ body {
   outline: 3px solid rgba(255,255,255,0.45);
   outline-offset: 2px;
 }
+
+/* =============================
+   House card hover interaction
+   ============================= */
+
+/* 카드 자체가 클릭 가능한 느낌 */
+.house-card{
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+}
+
+/* 호버 시 살짝 뜨는 효과 */
+.house-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+  border-color: rgba(30, 58, 138, 0.25); /* #1E3A8A 느낌 살짝 */
+}
+
+/* 눌렀을 때(클릭) 더 눌리는 느낌 */
+.house-card:active{
+  transform: translateY(0);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+}
+
+/* 썸네일도 같이 은은하게 반응 */
+.house-card .thumb{
+  transition: transform 200ms ease, filter 200ms ease;
+}
+
+.house-card:hover .thumb{
+  transform: scale(1.03);
+  filter: brightness(1.03);
+}
+
+/* 하트 버튼도 포인터 + 호버 시 살짝 확대 */
+.heart-btn{
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.heart-btn:hover{
+  transform: scale(1.08);
+  opacity: 0.9;
+}
+
+/* 모션 싫어하는 사용자(접근성) */
+@media (prefers-reduced-motion: reduce){
+  .house-card,
+  .house-card .thumb,
+  .heart-btn{
+    transition: none !important;
+  }
+}
