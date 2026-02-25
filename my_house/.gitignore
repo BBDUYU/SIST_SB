@@ -10,6 +10,5 @@ src/main/resources/application-*.yml
 # 로컬 개인 설정 파일
 .env
 
-.gradle/
-build/
+
 bin/
