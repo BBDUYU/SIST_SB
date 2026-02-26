@@ -3,15 +3,20 @@ package org.doit.ik.api;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // 중요: Spring용 Transactional
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -26,114 +31,145 @@ public class LhNoticeService {
         this.lhNoticeRepository = lhNoticeRepository;
         this.kakaoAddressService = kakaoAddressService;
         
-        this.restTemplate = new RestTemplate();
-        DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory();
-        factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE); 
-        this.restTemplate.setUriTemplateHandler(factory);
+        // 🚀 Apache HttpClient5 설정: 5초 지나면 강제로 연결 끊기
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ofSeconds(5))
+                .setResponseTimeout(Timeout.ofSeconds(5))
+                .build();
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+
+        // Factory 교체
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+        
+        this.restTemplate = new RestTemplate(factory);
+        DefaultUriBuilderFactory uriFactory = new DefaultUriBuilderFactory();
+        uriFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE); 
+        this.restTemplate.setUriTemplateHandler(uriFactory);
     }
     
     @Value("${api.key}")
     private String serviceKey;
 
-    @Transactional
+    // ❌ [수정] 메서드 전체 @Transactional 제거 (그래야 건별로 Commit 됨)
     public void collectLhNotices() {
+        log.info(">>>> LH 공고 데이터 전체 재수집 시작!");
         String[] targetCodes = {"05", "06"};
 
         for (String code : targetCodes) {
             int page = 1;
             boolean hasMore = true;
-            String typeName = code.equals("05") ? "분양주택" : "임대주택";
-
-            log.info(">>>> LH {} 모든 공고 수집 시작", typeName);
 
             while (hasMore) {
                 try {
-                    // 페이지당 50개씩, 페이지 번호를 1씩 올려가며 호출
+                    log.info(">>>> [데이터 요청] 코드: {}, 현재페이지: {}", code, page);
+                    Thread.sleep(1000);
+
                     String listUrl = "https://apis.data.go.kr/B552555/lhLeaseNoticeInfo1/lhLeaseNoticeInfo1"
                             + "?serviceKey=" + serviceKey 
-                            + "&PG_SZ=50"
-                            + "&PAGE=" + page
-                            + "&_type=json"
-                            + "&UPP_AIS_TP_CD=" + code;
-                    
-                    log.info("{} 수집 중... (페이지: {})", typeName, page);
+                            + "&PG_SZ=50&PAGE=" + page + "&_type=json&UPP_AIS_TP_CD=" + code;
                     
                     String response = restTemplate.getForObject(listUrl, String.class);
-                    ObjectMapper mapper = new ObjectMapper();
-                    JsonNode root = mapper.readTree(response);
+                    JsonNode root = new ObjectMapper().readTree(response);
                     
-                    // 1. 응답 데이터 검증
-                    if (root == null || root.size() < 2 || !root.get(1).has("dsList")) {
-                        log.info("{} 수집 완료 (더 이상 데이터 없음)", typeName);
+                    // 🚩 수정 포인트: dsList가 없거나, 비어있으면(isEmpty) 종료!
+                    if (root == null || root.size() < 2 || !root.get(1).has("dsList") || root.get(1).get("dsList").isEmpty()) {
+                        log.info(">>>> [수집 완료] {} 코드의 모든 데이터를 수집했습니다. (마지막 페이지: {})", code, page);
                         hasMore = false;
                         continue;
                     }
 
                     JsonNode dsList = root.get(1).get("dsList");
-                    if (dsList.size() == 0) {
-                        hasMore = false;
-                        continue;
-                    }
-
-                    // 2. 목록 순회 및 상세 정보 수집
-                    for (JsonNode item : dsList) {
-                        processNoticeItem(item, typeName);
-                    }
-
-                    // 3. 페이지 증가
-                    page++;
                     
-                    // API 과부하 방지를 위한 짧은 휴식 (선택 사항)
-                    Thread.sleep(200); 
-
+                    // 데이터가 실제로 있을 때만 루프 실행
+                    for (JsonNode item : dsList) {
+                        if (!"공고중".equals(item.path("PAN_SS").asText(""))) continue;
+                        try {
+                            processNoticeItem(item);
+                        } catch (Exception e) {
+                            log.error(">>>> [건너뜀] 개별 항목 처리 중 에러: {}", e.getMessage());
+                        }
+                    }
+                    
+                    page++; // 데이터 처리가 끝난 후 다음 페이지로
                 } catch (Exception e) {
-                    log.error("{} {}페이지 수집 중 오류: {}", typeName, page, e.getMessage());
-                    hasMore = false; // 에러 발생 시 중단
+                    log.error(">>>> [중단] 페이지 수집 중 에러 발생: {}", e.getMessage());
+                    hasMore = false;
                 }
             }
         }
-        log.info(">>>> 모든 LH 공고 수집 프로세스 종료");
+        log.info(">>>> 모든 데이터 수집 작업이 완료되었습니다!");
     }
 
-    private void processNoticeItem(JsonNode item, String typeName) {
+    // ✨ [수정] 여기에 @Transactional 추가 (한 건마다 즉시 DB 반영)
+    @Transactional
+    public void processNoticeItem(JsonNode item) {
         String panId = item.path("PAN_ID").asText("");
-        if (panId.isEmpty()) return;
-
         String address = fetchDetailAddress(item);
-
+        
+        // 1. 주소 데이터 보정 (기존 로직 동일)
         if (address == null || address.isEmpty() || address.equals("단지주소")) {
             String region = item.path("CNP_CD_NM").asText("");
-            String title = item.path("PAN_NM").asText("");
-            address = region + " " + title;
-            log.info(">>>> 상세주소 부재로 대체주소 생성: {}", address);
+            String title = item.path("PAN_NM").asText();
+            String cleanTitle = title.replaceAll("\\(.*?\\)", "").replaceAll("\\[.*?\\]", "").trim();
+            
+            // 검색어 노이즈 제거
+            String[] junkKeywords = {"입주자", "공고", "잔여", "일반", "추가", "매각", "블록", "권", "후", "선착순"};
+            for (String key : junkKeywords) {
+                if (cleanTitle.contains(key)) cleanTitle = cleanTitle.split(key)[0].trim();
+            }
+            address = (cleanTitle.length() < 2) ? region : region + " " + cleanTitle;
         }
 
-        log.info("[검사] 공고명: {}, 최종 주소: {}", item.path("PAN_NM").asText(), address);
-
-        LhNotice notice = lhNoticeRepository.findById(panId).orElse(new LhNotice());
-        notice.setPanId(panId);
-        notice.setPanNm(item.path("PAN_NM").asText("제목 없음"));
-        notice.setAisTpCdNm(item.path("AIS_TP_CD_NM").asText("-"));
-        notice.setPanSs(item.path("PAN_SS").asText("-"));
-        notice.setDtlUrl(item.path("DTL_URL").asText(""));
-        notice.setClsgDt(item.path("CLSG_DT").asText(""));
-        notice.setFullAddress(address);
-        notice.setUpdatedAt(LocalDateTime.now());
-
-        // 카카오 좌표 변환
+        // 2. 카카오 API로 좌표 추출
         Double[] coords = kakaoAddressService.getCoordinate(address);
+        
+        // 3. 검색어 단축 재시도 로직
+        if (coords == null && address.contains(" ")) {
+            String[] parts = address.split(" ");
+            for (int i = 1; i <= 2; i++) {
+                if (parts.length - i < 2) break;
+                String retryAddr = String.join(" ", java.util.Arrays.copyOfRange(parts, 0, parts.length - i));
+                coords = kakaoAddressService.getCoordinate(retryAddr);
+                if (coords != null) {
+                    address = retryAddr;
+                    break;
+                }
+            }
+        }
+
+        // 🚀 [핵심 수정] 좌표가 있을 때만 저장!
         if (coords != null) {
+            LhNotice notice = lhNoticeRepository.findById(panId).orElse(new LhNotice());
+            notice.setPanId(panId);
+            notice.setPanNm(item.path("PAN_NM").asText());
+            notice.setAisTpCdNm(item.path("AIS_TP_CD_NM").asText());
+            notice.setPanSs(item.path("PAN_SS").asText());
+            notice.setDtlUrl(item.path("DTL_URL").asText());
+            notice.setClsgDt(item.path("CLSG_DT").asText());
+            notice.setFullAddress(address);
             notice.setLatitude(coords[0]);
             notice.setLongitude(coords[1]);
+            notice.setUpdatedAt(LocalDateTime.now());
+
+            lhNoticeRepository.saveAndFlush(notice); 
+            log.info(">>>> [저장 완료] {} (좌표: {}, {})", address, coords[0], coords[1]);
+        } else {
+            // 좌표를 못 찾으면 저장하지 않고 로그만 남기고 종료
+            log.warn(">>>> [저장 건너뜀] 좌표를 찾을 수 없음: {}", address);
         }
-        
-        lhNoticeRepository.saveAndFlush(notice); 
-        log.info(">>>> DB 저장 완료: {}", notice.getPanNm());
     }
-    
+
     private String fetchDetailAddress(JsonNode item) {
+        String panId = item.path("PAN_ID").asText("");
+        String panNm = item.path("PAN_NM").asText();
+        
+        // 🚩 [원인파악] 호출 시작 로그 추가
+        log.info(">>>> [상세조회 시작] PAN_ID: {}, 공고명: {}", panId, panNm);
+
         try {
-            String panId = item.path("PAN_ID").asText("");
             String uppAisTpCd = item.path("UPP_AIS_TP_CD").asText("");
             String splInfTpCd = item.path("SPL_INF_TP_CD").asText("");
             String ccrCnntSysDsCd = item.path("CCR_CNNT_SYS_DS_CD").asText("");
@@ -148,30 +184,38 @@ public class LhNoticeService {
                              + "&AIS_TP_CD=" + aisTpCd
                              + "&_type=json";
 
+            // ⏱️ 타임아웃 발생 시 catch 블록으로 던져지도록 처리
             String response = restTemplate.getForObject(detailUrl, String.class);
-            JsonNode root = new ObjectMapper().readTree(response);
             
+            // 응답을 받았을 때만 로그 출력
+            log.info(">>>> [상세조회 완료] PAN_ID: {}", panId);
+
+            JsonNode root = new ObjectMapper().readTree(response);
+
             if (root != null && root.isArray() && root.size() > 1) {
                 JsonNode dataNode = root.get(1);
-                
-                // dsSbd(단지), dsLbd(토지) 등 모든 노드를 순회하며 주소 필드 탐색
                 Iterator<String> fieldNames = dataNode.fieldNames();
                 while (fieldNames.hasNext()) {
                     String fieldName = fieldNames.next();
+                    if (fieldName.endsWith("Nm")) continue;
+
                     JsonNode listNode = dataNode.get(fieldName);
-                    
                     if (listNode.isArray() && listNode.size() > 0) {
                         JsonNode firstItem = listNode.get(0);
-                        // 주소 필드(LCT_ARA_ADR)가 있는지 확인
                         if (firstItem.has("LCT_ARA_ADR")) {
-                            return firstItem.get("LCT_ARA_ADR").asText();
+                            String addr = firstItem.get("LCT_ARA_ADR").asText("").trim();
+                            if (addr.isEmpty() || addr.equals("단지주소")) continue;
+                            String dtlAddr = firstItem.path("LCT_ARA_DTL_ADR").asText("").trim();
+                            if (dtlAddr.equals("단지상세주소")) dtlAddr = "";
+                            return (addr + " " + dtlAddr).trim();
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            log.error("상세 주소 파싱 에러 (PAN_ID: {}): {}", item.path("PAN_ID").asText(), e.getMessage());
+            // 🚨 타임아웃이나 에러 발생 시 로그를 찍고 null을 리턴하여 다음으로 넘어가게 함
+            log.error(">>>> [상세조회 실패/타임아웃] PAN_ID: {}, 사유: {}", panId, e.getMessage());
         }
-        return null;
+        return null; 
     }
 }

@@ -51,6 +51,7 @@ dependencies {
     
     implementation 'org.json:json:20231013'
     implementation 'com.opencsv:opencsv:5.9'
+    implementation 'org.apache.httpcomponents.client5:httpclient5'
 }
 
 tasks.named('test') {
