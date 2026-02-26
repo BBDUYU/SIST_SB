@@ -3,31 +3,43 @@
       th:replace="layout/layout :: html(~{::section}, 'My House')">
 
 <section>
+  <link rel="stylesheet" th:href="@{/css/detail.css}">
   <div class="container-fluid px-0">
     <div class="row g-0 app-main">
 
       <!-- LEFT LIST -->
       <aside class="col-md-4 list-panel">
-        <div class="filter-bar d-flex gap-2">
-          <select class="form-select"><option selected>주거형태</option></select>
-          <select class="form-select"><option selected>평수</option></select>
-          <select class="form-select"><option selected>가격</option></select>
-        </div>
-
-        <div class="list-scroll">
-          <div class="card house-card mb-3">
-            <div class="card-body d-flex gap-3">
-              <div class="thumb"></div>
-              <div class="flex-grow-1">
-                <div class="fw-semibold">마포 행복주택</div>
-                <div class="small text-muted">홍대입구역 도보 10분 | 전용 17평</div>
-              </div>
-              <button class="btn btn-link p-0 heart-btn" type="button" aria-label="위시리스트">
-                <i class="bi bi-heart"></i>
-              </button>
-            </div>
+        <div id="panelContent">
+          <div class="filter-bar d-flex gap-2">
+            <select class="form-select"><option selected>주거형태</option></select>
+            <select class="form-select"><option selected>평수</option></select>
+            <select class="form-select"><option selected>가격</option></select>
           </div>
-        </div>
+          
+          <div class="list-scroll">
+
+			  <div class="card house-card mb-3 house-item" data-key="1">
+			    <div class="card-body d-flex gap-3">
+			      <div class="thumb"></div>
+			
+			      <div class="flex-grow-1">
+			        <div class="fw-semibold">마포 행복주택</div>
+			        <div class="small text-muted">
+			          홍대입구역 도보 10분 | 전용 17평
+			        </div>
+			      </div>
+			
+			      <button class="btn btn-link p-0 heart-btn"
+			              type="button"
+			              aria-label="위시리스트"
+			              onclick="event.stopPropagation();">
+			        <i class="bi bi-heart"></i>
+			      </button>
+			    </div>
+			  </div>
+			
+			</div>
+		</div>
       </aside>
 
       <!-- MAP -->
