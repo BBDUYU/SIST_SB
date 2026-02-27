@@ -57,8 +57,11 @@ public class SecurityConfig {
 
                    new AntPathRequestMatcher("/api/**"),
                    
+                   new AntPathRequestMatcher("/listing/{propertyKey}/panel"),
+                   
                    // dev
                    new AntPathRequestMatcher("/h2-console/**")
+                   
                ).permitAll()
                .anyRequest().authenticated()
            )

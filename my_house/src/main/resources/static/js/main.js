@@ -365,11 +365,9 @@ function drawSafePolyline(path, map) {
     }
 }
 
-// 상세 페이지 내 인프라 정보를 업데이트하는 함수
 async function updateInfraStats(lat, lng) {
     const ps = new kakao.maps.services.Places();
     
-    // 카테고리별 검색을 위한 프로미스 생성 함수
     const getCount = (categoryCode, radius) => {
         return new Promise((resolve) => {
             ps.categorySearch(categoryCode, (data, status, pagination) => {
@@ -412,8 +410,6 @@ async function openDetail(propertyKey) {
     const html = await res.text();
     animateSwap(html);
 
-    // ✅ HTML이 교체된 후, 데이터에서 위경도를 추출해 인프라 정보 로드
-    // 서버 응답 HTML 내에 숨겨진 input이나 data 속성에서 위경도를 가져온다고 가정
     setTimeout(() => {
         const recenterBtn = document.querySelector(".panel-recenter");
         if (recenterBtn) {
