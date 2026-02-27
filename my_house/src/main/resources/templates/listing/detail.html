@@ -11,141 +11,162 @@
   <div class="container-fluid px-0">
     <div class="row g-0 app-main">
 
-      <!-- LEFT (main과 동일: col-md-4 / list-panel) -->
+      <!-- LEFT -->
       <aside class="col-md-4 list-panel detail-panel">
-        <!-- main의 list-scroll 느낌으로 스크롤 -->
         <div class="detail-scroll">
 
-          <div class="panel">
+          <!-- ✅ [1] 여기부터: 좌측 패널 FRAGMENT -->
+          <div th:fragment="panel" class="detail-scroll">
+            <div class="detail-page">
+            <div class="panel detail-panel-card">
 
-            <div class="hero">
-              <div class="heroTop">
-                <div>
-                  <h1 class="title" th:text="${property.name}">서울 관악구 신림동 원룸</h1>
-                  <p class="price" th:text="${property.price}">보증금 1000 / 월세 45</p>
-                </div>
-
-                <div class="actions">
-                  <button class="iconBtn" id="btnHeart" type="button" title="위시리스트">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M12 21s-7-4.7-9.5-9.1C.3 8.2 2.1 5.2 5.4 4.4c1.9-.4 3.8.2 5 1.6 1.2-1.4 3.1-2 5-1.6 3.3.8 5.1 3.8 2.9 7.5C19 16.3 12 21 12 21z"
-                            stroke="#0F172A" stroke-width="1.6"/>
-                    </svg>
-                  </button>
-
-                  <button class="iconBtn" id="btnShare" type="button" title="공유">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M16 8a3 3 0 1 0-2.8-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
-                      <path d="M8 12l8-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
-                      <path d="M8 12l8 4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
-                      <path d="M8 14a3 3 0 1 1 0-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
-                      <path d="M16 20a3 3 0 1 0 0-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
-                    </svg>
-                  </button>
-                </div>
+              <!-- 패널에서만 쓰는 X (전체 detail 페이지에서도 보여도 상관없으면 그대로) -->
+              <div class="detail-panel-top">
+                <button type="button" class="btn btn-light btn-sm panel-close" aria-label="닫기">
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </div>
 
-              <div class="chips">
-                <span class="chip">🏠 <span th:text="${property.type}">원룸</span></span>
-                <span class="chip">📐 <span th:text="${property.area}">18㎡</span></span>
-                <span class="chip">📍 위치 기반 분석</span>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="photo">
-                <div class="photoTag">대충 사진</div>
-                <div class="photoHint">사진 1/1</div>
-              </div>
-            </div>
-
-            <div class="section">
-              <h3>기본 정보</h3>
-              <div class="kv">
-                <div class="k">유형</div><div class="v" th:text="${property.type}">원룸</div>
-                <div class="k">면적</div><div class="v" th:text="${property.area}">18㎡</div>
-                <div class="k">주소</div><div class="v" th:text="${property.address}">서울특별시 관악구 신림동 123-45</div>
-              </div>
-            </div>
-
-            <div class="section">
-              <h3>치안 정보</h3>
-
-              <div class="safetyRow">
-                <div class="scoreCard">
-                  <div class="scoreTop">
-                    <div class="scoreLabel">안전 점수</div>
-                    <div class="badge" th:text="${property.safetyScore + '점'}">78점</div>
-                  </div>
-                  <div class="mini">주변 치안/시설 데이터를 종합해 점수화했어요.</div>
-                  <div class="barWrap">
-                    <div class="bar" th:style="'width:' + ${property.safetyScore} + '%;'"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="list">
-                <div class="item">
+              <div class="hero">
+                <div class="heroTop">
                   <div>
-                    <b>📹 CCTV (300m)</b>
-                    <div class="muted">반경 300m 이내</div>
+                    <h1 class="title" th:text="${property.name}">서울 관악구 신림동 원룸</h1>
+                    <p class="price" th:text="${property.price}">보증금 1000 / 월세 45</p>
                   </div>
-                  <div class="badge" th:text="${property.cctvCount + '개'}">21개</div>
+
+                  <div class="actions">
+                    <button class="iconBtn" id="btnHeart" type="button" title="위시리스트">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 21s-7-4.7-9.5-9.1C.3 8.2 2.1 5.2 5.4 4.4c1.9-.4 3.8.2 5 1.6 1.2-1.4 3.1-2 5-1.6 3.3.8 5.1 3.8 2.9 7.5C19 16.3 12 21 12 21z"
+                              stroke="#0F172A" stroke-width="1.6"/>
+                      </svg>
+                    </button>
+
+                    <button class="iconBtn" id="btnShare" type="button" title="공유">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M16 8a3 3 0 1 0-2.8-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M8 12l8-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M8 12l8 4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M8 14a3 3 0 1 1 0-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M16 20a3 3 0 1 0 0-4" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
-                <div class="item">
-                  <div>
-                    <b>🌙 여성안심귀갓길</b>
-                    <div class="muted">가장 가까운 구간</div>
-                  </div>
-                  <div class="badge" th:text="${property.safeRoadDistance + 'm'}">320m</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="section">
-              <h3>생활 인프라</h3>
-
-              <div class="grid2">
-                <div class="infraCard">
-                  <div class="infraTop">
-                    <div class="infraTitle">🚇 지하철</div>
-                    <div class="pill good">좋음</div>
-                  </div>
-                  <div class="infraSub">가장 가까운 역 650m</div>
-                </div>
-
-                <div class="infraCard">
-                  <div class="infraTop">
-                    <div class="infraTitle">🏪 편의점</div>
-                    <div class="pill good">좋음</div>
-                  </div>
-                  <div class="infraSub">반경 300m 내 5개</div>
-                </div>
-
-                <div class="infraCard">
-                  <div class="infraTop">
-                    <div class="infraTitle">🏥 병원</div>
-                    <div class="pill">보통</div>
-                  </div>
-                  <div class="infraSub">반경 1km 내 3개</div>
-                </div>
-
-                <div class="infraCard">
-                  <div class="infraTop">
-                    <div class="infraTitle">🛒 마트</div>
-                    <div class="pill warn">아쉬움</div>
-                  </div>
-                  <div class="infraSub">반경 1km 내 1개</div>
+                <div class="chips">
+                  <span class="chip">🏠 <span th:text="${property.type}">원룸</span></span>
+                  <span class="chip">📐 <span th:text="${property.area}">18㎡</span></span>
+                  <span class="chip">📍 위치 기반 분석</span>
                 </div>
               </div>
-            </div>
 
-          </div><!-- /.panel -->
-        </div><!-- /.detail-scroll -->
+              <div class="section">
+                <div class="photo">
+                  <div class="photoTag">대충 사진</div>
+                  <div class="photoHint">사진 1/1</div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>기본 정보</h3>
+                <div class="kv">
+                  <div class="k">유형</div><div class="v" th:text="${property.type}">원룸</div>
+                  <div class="k">면적</div><div class="v" th:text="${property.area}">18㎡</div>
+                  <div class="k">주소</div><div class="v" th:text="${property.address}">서울특별시 관악구 신림동 123-45</div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>치안 정보</h3>
+
+                <div class="safetyRow">
+                  <div class="scoreCard">
+                    <div class="scoreTop">
+                      <div class="scoreLabel">안전 점수</div>
+                      <div class="badge" th:text="${property.safetyScore + '점'}">78점</div>
+                    </div>
+                    <div class="mini">주변 치안/시설 데이터를 종합해 점수화했어요.</div>
+                    <div class="barWrap">
+                      <div class="bar" th:style="'width:' + ${property.safetyScore} + '%;'"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="list">
+                  <div class="item">
+                    <div>
+                      <b>📹 CCTV (300m)</b>
+                      <div class="muted">반경 300m 이내</div>
+                    </div>
+                    <div class="badge" th:text="${property.cctvCount + '개'}">21개</div>
+                  </div>
+
+                  <div class="item">
+                    <div>
+                      <b>🌙 여성안심귀갓길</b>
+                      <div class="muted">가장 가까운 구간</div>
+                    </div>
+                    <div class="badge" th:text="${property.safeRoadDistance + 'm'}">320m</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>생활 인프라</h3>
+
+                <div class="grid2">
+                  <div class="infraCard">
+                    <div class="infraTop">
+                      <div class="infraTitle">🚇 지하철</div>
+                      <div class="pill good">좋음</div>
+                    </div>
+                    <div class="infraSub">가장 가까운 역 650m</div>
+                  </div>
+
+                  <div class="infraCard">
+                    <div class="infraTop">
+                      <div class="infraTitle">🏪 편의점</div>
+                      <div class="pill good">좋음</div>
+                    </div>
+                    <div class="infraSub">반경 300m 내 5개</div>
+                  </div>
+
+                  <div class="infraCard">
+                    <div class="infraTop">
+                      <div class="infraTitle">🏥 병원</div>
+                      <div class="pill">보통</div>
+                    </div>
+                    <div class="infraSub">반경 1km 내 3개</div>
+                  </div>
+
+                  <div class="infraCard">
+                    <div class="infraTop">
+                      <div class="infraTitle">🛒 마트</div>
+                      <div class="pill warn">아쉬움</div>
+                    </div>
+                    <div class="infraSub">반경 1km 내 1개</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 패널에서 지도 이동 버튼(있으면 좋음) -->
+              <div class="section">
+                <button type="button"
+                        class="btn btn-outline-primary w-100 panel-recenter"
+                        th:attr="data-lat=${property.lat},data-lng=${property.lng}">
+                  지도에서 매물 위치로 이동
+                </button>
+              </div>
+			</div>
+            </div>
+          </div>
+          <!-- ✅ [1] FRAGMENT 끝 -->
+
+        </div>
       </aside>
 
-      <!-- RIGHT (main과 동일: col-md-8 / map-wrap / map-container) -->
+      <!-- RIGHT (페이지 detail에서만 필요한 지도) -->
       <section class="col-md-8 map-wrap detail-map-wrap">
         <div id="detailMap" class="map-container"></div>
 

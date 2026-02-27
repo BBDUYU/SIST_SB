@@ -34,7 +34,29 @@ public class MainController {
         model.addAttribute("isLogin", principal != null);
         model.addAttribute("kakaoJsKey", kakaoJsKey);
 
+        Map<String, Object> property = dummyProperty(propertyKey);
+        model.addAttribute("property", property);
+
+        return "listing/detail";
+    }
+
+    // ✅ panel: detail.html 안에 정의한 fragment만 반환
+    @GetMapping("/listing/{propertyKey}/panel")
+    public String detailPanel(@PathVariable("propertyKey") String propertyKey,
+                              Model model,
+                              Principal principal) {
+
+        model.addAttribute("isLogin", principal != null);
+
+        Map<String, Object> property = dummyProperty(propertyKey);
+        model.addAttribute("property", property);
+
+        return "listing/detail :: panel";
+    }
+
+    private Map<String, Object> dummyProperty(String propertyKey) {
         Map<String, Object> property = new HashMap<>();
+        property.put("key", propertyKey);
         property.put("name", "서울 관악구 신림동 원룸");
         property.put("price", "보증금 1000 / 월세 45");
         property.put("type", "원룸");
@@ -45,10 +67,7 @@ public class MainController {
         property.put("safetyScore", 78);
         property.put("cctvCount", 21);
         property.put("safeRoadDistance", 320);
-
-        model.addAttribute("property", property);
-
-        return "listing/detail";
+        return property;
     }
         @GetMapping("/mypage")
     public String mypage(Model model) {
