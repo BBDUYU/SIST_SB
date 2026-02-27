@@ -61,6 +61,7 @@ public class MyHouseApplication {
         };
     }
     */
+	/*
 	@Bean
     CommandLineRunner importSafePath(org.doit.ik.api.SafePathImportService service) {
         return args -> {
@@ -72,4 +73,5 @@ public class MyHouseApplication {
             System.out.println(">>>> [데이터 초기화] 안심귀갓길 데이터 임포트 완료!");
         };
     }
+    */
 }
