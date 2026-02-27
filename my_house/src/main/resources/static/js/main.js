@@ -143,4 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
   });
-});
+})();
+
+

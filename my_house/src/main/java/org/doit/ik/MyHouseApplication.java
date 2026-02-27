@@ -48,4 +48,30 @@ public class MyHouseApplication {
         };
     }
 	*/
+	/*
+	@Bean
+    CommandLineRunner collectLh(org.doit.ik.api.LhNoticeService service) {
+        return args -> {
+            System.out.println(">>>> LH 공고 데이터 수집 및 좌표 매칭 시작!");
+            
+            // 아까 만든 수집 메서드 호출
+            service.collectLhNotices();
+            
+            System.out.println(">>>> LH 공고 데이터 수집 완료! 이제 지도에서 매칭된 핀을 확인할 수 있습니다.");
+        };
+    }
+    */
+	/*
+	@Bean
+    CommandLineRunner importSafePath(org.doit.ik.api.SafePathImportService service) {
+        return args -> {
+            System.out.println(">>>> [데이터 초기화] 서울특별시 안심귀갓길 경로 데이터 임포트 시작!");
+            
+            // SafePathImportService에서 만든 실행 메서드 호출
+            service.runImport();
+            
+            System.out.println(">>>> [데이터 초기화] 안심귀갓길 데이터 임포트 완료!");
+        };
+    }
+    */
 }
