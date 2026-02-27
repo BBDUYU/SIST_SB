@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
   });
-})();
+})
 
 // --- [LH 공고 핀 & 안심귀갓길 통합 로직] ---
 document.addEventListener("DOMContentLoaded", function () {
