@@ -264,3 +264,8 @@
 .detail-panel-top i{
   color: #64748B;
 }
+
+.detail-panel-top{
+  background:#F6F8FB !important;
+  border-bottom:1px solid #E7ECF3;
+}

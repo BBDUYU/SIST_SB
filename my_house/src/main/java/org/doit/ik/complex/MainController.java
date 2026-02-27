@@ -23,7 +23,7 @@ public class MainController {
         model.addAttribute("alarmCount", 3);
         return "main/main";
     }
-
+/*
     @GetMapping("/listing/{propertyKey}")
     public String detail(@PathVariable("propertyKey") String propertyKey,
                          Model model,
@@ -37,7 +37,7 @@ public class MainController {
 
         return "listing/detail";
     }
-
+*/
     // ✅ panel: detail.html 안에 정의한 fragment만 반환
     @GetMapping("/listing/{propertyKey}/panel")
     public String detailPanel(@PathVariable("propertyKey") String propertyKey,
@@ -49,7 +49,7 @@ public class MainController {
         Map<String, Object> property = dummyProperty(propertyKey);
         model.addAttribute("property", property);
 
-        return "listing/detail :: panel";
+        return "listing/detail_panel :: panel";
     }
 
     private Map<String, Object> dummyProperty(String propertyKey) {

@@ -17,6 +17,8 @@ public class BoardController {
     public String board(@RequestParam(name = "category", defaultValue = "free") String category,
                         Model model,
                         Principal principal) {
+    	
+    	System.out.println(">>>> /board 들어옴");
 
         model.addAttribute("isLogin", principal != null);
         model.addAttribute("selectedCategory", category);

@@ -4,46 +4,51 @@
 
 <section>
   <link rel="stylesheet" th:href="@{/css/detail.css}">
+
   <div class="container-fluid px-0">
     <div class="row g-0 app-main">
 
-      <!-- LEFT LIST -->
-      <aside class="col-md-4 list-panel">
-        <div id="panelContent">
-          <div class="filter-bar d-flex gap-2">
-            <select class="form-select"><option selected>주거형태</option></select>
-            <select class="form-select"><option selected>평수</option></select>
-            <select class="form-select"><option selected>가격</option></select>
-          </div>
-          
-          <div class="list-scroll">
+      <!-- LEFT -->
+      <aside class="col-md-3 list-panel">
+        <div id="panelContent" class="panel-shell">
 
-			  <div class="card house-card mb-3 house-item" data-key="1">
-			    <div class="card-body d-flex gap-3">
-			      <div class="thumb"></div>
-			
-			      <div class="flex-grow-1">
-			        <div class="fw-semibold">마포 행복주택</div>
-			        <div class="small text-muted">
-			          홍대입구역 도보 10분 | 전용 17평
-			        </div>
-			      </div>
-			
-			      <button class="btn btn-link p-0 heart-btn"
-			              type="button"
-			              aria-label="위시리스트"
-			              onclick="event.stopPropagation();">
-			        <i class="bi bi-heart"></i>
-			      </button>
-			    </div>
-			  </div>
-			
-			</div>
-		</div>
+          <!-- ✅ 리스트 화면: 필터바는 head(고정) -->
+          <div class="panel-head">
+            <div class="filter-bar d-flex gap-2">
+              <select class="form-select"><option selected>주거형태</option></select>
+              <select class="form-select"><option selected>평수</option></select>
+              <select class="form-select"><option selected>가격</option></select>
+            </div>
+          </div>
+
+          <!-- ✅ 리스트는 body(스크롤) -->
+          <div class="panel-body">
+            <div class="card house-card mb-3 house-item" data-key="1">
+              <div class="card-body d-flex gap-3">
+                <div class="thumb"></div>
+
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">마포 행복주택</div>
+                  <div class="small text-muted">
+                    홍대입구역 도보 10분 | 전용 17평
+                  </div>
+                </div>
+
+                <button class="btn btn-link p-0 heart-btn"
+                        type="button"
+                        aria-label="위시리스트">
+                  <i class="bi bi-heart"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 카드 더 추가 -->
+          </div>
+        </div>
       </aside>
 
-      <!-- MAP -->
-      <section class="col-md-8 map-wrap">
+      <!-- RIGHT MAP -->
+      <section class="col-md-9 map-wrap">
         <div id="map" class="map-container"></div>
 
         <div class="fab-stack">
@@ -61,7 +66,6 @@
     </div>
   </div>
 
-  <!-- ✅ main 페이지에서만 필요한 스크립트는 content 안에 둬도 됨 -->
   <script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsKey}|"></script>
   <script th:src="@{/js/main.js}"></script>
 </section>
