@@ -190,7 +190,7 @@ function initAdditionalLayers(map) {
 }
 
 let cctvMarkers = []; // 기존 마커 관리를 위한 배열
-
+let cctvInfoWindows = [];
 function updateCctvMarkers(map) {
     const bounds = map.getBounds();
     const sw = bounds.getSouthWest();
@@ -202,57 +202,62 @@ function updateCctvMarkers(map) {
             return res.json();
         })
         .then(data => {
-            // 기존 마커 제거
+            // 1. 기존 마커 제거 및 인포윈도우 닫기
             cctvMarkers.forEach(m => m.setMap(null));
             cctvMarkers = [];
+            
+            // 👈 추가: 기존 인포윈도우 모두 닫고 배열 비우기
+            cctvInfoWindows.forEach(iw => iw.close());
+            cctvInfoWindows = [];
 
-            // ✅ 데이터가 배열인지 반드시 확인
-            if (!Array.isArray(data)) {
-                console.warn("CCTV 데이터 형식이 배열이 아닙니다:", data);
-                return;
-            }
+            if (!Array.isArray(data)) return;
 
-			data.forEach(cctv => {
-			    // 1. 마커 생성
-			    const marker = new kakao.maps.Marker({
-			        position: new kakao.maps.LatLng(cctv.latitude, cctv.longitude),
-			        image: new kakao.maps.MarkerImage(
-			            'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-			            new kakao.maps.Size(20, 30)
-			        )
-			    });
+            data.forEach(cctv => {
+                const marker = new kakao.maps.Marker({
+                    position: new kakao.maps.LatLng(cctv.latitude, cctv.longitude),
+                    image: new kakao.maps.MarkerImage(
+                        'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                        new kakao.maps.Size(20, 30)
+                    )
+                });
 
-			    // 2. 인포윈도우 생성 (호버 시 나타날 내용)
-			    const iwContent = `
-			        <div style="padding:10px; min-width:150px; border-radius:8px;">
-			            <div style="font-weight:bold; color:#1e293b; margin-bottom:4px;">📷 CCTV 정보</div>
-			            <div style="font-size:12px; color:#475569;">용도: <b>${cctv.purposeDesc}</b></div>
-			            <div style="font-size:12px; color:#475569;">대수: <b>${cctv.count || 0}대</b></div>
-			            <div style="font-size:11px; color:#94a3b8; margin-top:4px;">📍 ${cctv.agency}</div>
-			        </div>
-			    `;
-			    
-			    const infowindow = new kakao.maps.InfoWindow({
-			        content: iwContent,
-			        disableAutoPan: true // 마커 호버할 때 지도가 이동하지 않게 설정
-			    });
+				const iwContent = `
 
-			    // 3. 이벤트 리스너 등록 (마우스 오버/아웃)
-			    kakao.maps.event.addListener(marker, 'mouseover', function() {
-			        infowindow.open(map, marker);
-			    });
+							        <div style="padding:10px; min-width:150px; border-radius:8px;">
 
-			    kakao.maps.event.addListener(marker, 'mouseout', function() {
-			        infowindow.close();
-			    });
+							            <div style="font-weight:bold; color:#1e293b; margin-bottom:4px;">📷 CCTV 정보</div>
 
-			    marker.setMap(map);
-			    cctvMarkers.push(marker);
-			});
+							            <div style="font-size:12px; color:#475569;">용도: <b>${cctv.purposeDesc}</b></div>
+
+							            <div style="font-size:12px; color:#475569;">대수: <b>${cctv.count || 0}대</b></div>
+
+							            <div style="font-size:11px; color:#94a3b8; margin-top:4px;">📍 ${cctv.agency}</div>
+
+							        </div>
+
+							    `;
+                
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: iwContent,
+                    disableAutoPan: true 
+                });
+
+                // 2. 인포윈도우 배열에 보관 👈 추가
+                cctvInfoWindows.push(infowindow);
+
+                kakao.maps.event.addListener(marker, 'mouseover', function() {
+                    infowindow.open(map, marker);
+                });
+
+                kakao.maps.event.addListener(marker, 'mouseout', function() {
+                    infowindow.close();
+                });
+
+                marker.setMap(map);
+                cctvMarkers.push(marker);
+            });
         })
-        .catch(err => {
-            console.error("CCTV 로딩 중 에러 발생:", err);
-        });
+        .catch(err => console.error("CCTV 로딩 중 에러:", err));
 }
 
 // [함수] LH 마커 및 오버레이 표시
