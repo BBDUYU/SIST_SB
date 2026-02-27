@@ -11,7 +11,7 @@
 /* =========================
    GLOBAL / SCROLL POLICY
    - 전체 페이지 스크롤 X
-   - 왼쪽 패널만 스크롤
+   - 좌측 패널만 스크롤
    ========================= */
 html, body{
   height:100%;
@@ -45,7 +45,27 @@ body{
   height:100%;
   background:#f3f4f6;
   border-right:1px solid #e5e7eb;
-  overflow:hidden;              /* 바깥은 숨기고 */
+  overflow:hidden; /* 바깥은 숨기고 내부에서만 스크롤 */
+}
+
+/* ✅ 패널 내부를 "헤더(필터바/상단바) + 본문(스크롤)" 구조로 통일 */
+.panel-shell{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* 상단 고정 영역(필터바 or 패널탑) */
+.panel-head{
+  flex:0 0 auto;
+}
+
+/* 본문 스크롤 영역 */
+.panel-body{
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:12px;
 }
 
 /* main의 필터바 */
@@ -54,20 +74,6 @@ body{
   padding:10px;
   background:#fff;
   border-bottom:1px solid #e5e7eb;
-}
-
-/* main: 리스트 영역만 스크롤 */
-.list-scroll{
-  height:calc(100% - 56px);
-  overflow-y:auto;
-  padding:12px;
-}
-
-/* detail(SPA 패널): 이 div가 있어야 스크롤 됨 */
-.detail-scroll{
-  height:100%;
-  overflow-y:auto;
-  padding:12px;                /* list-scroll과 통일감 */
 }
 
 /* =========================
@@ -118,14 +124,14 @@ body{
   position:relative;
   height:100%;
   background:#e5e7eb;
-  overflow:hidden;              /* 우측은 스크롤 X */
+  overflow:hidden;
 }
 
 .map-container{
   width:100%;
   height:100%;
   position:relative;
-  z-index:1;                    /* 지도는 아래 */
+  z-index:1;
 }
 
 /* =========================
@@ -230,16 +236,13 @@ body{
   opacity:0;
 }
 
-/* detail 패널 상단 X (sticky) */
+/* detail 패널 상단 X (sticky 느낌) */
 .detail-panel-top{
   display:flex;
   justify-content:flex-end;
-  padding:10px 12px 0 12px;
+  padding:10px 12px 10px 12px;
   border-bottom:1px solid rgba(0,0,0,0.06);
-  background:#fff;
-  position:sticky;
-  top:0;
-  z-index:2;
+  background:#F6F8FB; /* 흰띠 방지 */
 }
 
 /* detail 패널 카드 */
