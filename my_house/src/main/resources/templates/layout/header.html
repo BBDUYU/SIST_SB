@@ -15,11 +15,14 @@
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle text-white"
              href="#"
-             data-bs-toggle="dropdown">게시판</a>
+             role="button"
+             data-bs-toggle="dropdown"
+             data-bs-auto-close="true"
+             aria-expanded="false">게시판</a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="#">공지사항</a></li>
-            <li><a class="dropdown-item" href="#">자유게시판</a></li>
-            <li><a class="dropdown-item" href="#">Q&A</a></li>
+            <li><a class="dropdown-item" th:href="@{/board(category=notice)}">공지사항</a></li>
+            <li><a class="dropdown-item" th:href="@{/board(category=free)}">자유게시판</a></li>
+            <li><a class="dropdown-item" th:href="@{/board(category=qna)}">Q&A</a></li>
           </ul>
         </li>
 
