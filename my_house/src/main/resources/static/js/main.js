@@ -364,3 +364,62 @@ function drawSafePolyline(path, map) {
         console.error("안심귀갓길 툴팁 렌더링 에러:", e);
     }
 }
+
+// 상세 페이지 내 인프라 정보를 업데이트하는 함수
+async function updateInfraStats(lat, lng) {
+    const ps = new kakao.maps.services.Places();
+    
+    // 카테고리별 검색을 위한 프로미스 생성 함수
+    const getCount = (categoryCode, radius) => {
+        return new Promise((resolve) => {
+            ps.categorySearch(categoryCode, (data, status, pagination) => {
+                if (status === kakao.maps.services.Status.OK) {
+                    // pagination.totalCount는 전체 개수를 알려줌
+                    resolve(pagination.totalCount);
+                } else {
+                    resolve(0);
+                }
+            }, {
+                location: new kakao.maps.LatLng(lat, lng),
+                radius: radius
+            });
+        });
+    };
+
+    // 4가지 인프라 병렬 호출
+    const [subway, cvs, hospital, mart] = await Promise.all([
+        getCount('PK6', 1000), // 지하철(1km)
+        getCount('CS2', 300),  // 편의점(300m)
+        getCount('HP8', 1000), // 병원(1km)
+        getCount('MT1', 1000)  // 대형마트(1km)
+    ]);
+
+    // UI 업데이트 (HTML에 해당 ID들이 있어야 함)
+    if(document.getElementById('subway-count')) document.getElementById('subway-count').innerText = subway;
+    if(document.getElementById('cvs-count')) document.getElementById('cvs-count').innerText = cvs;
+    if(document.getElementById('hospital-count')) document.getElementById('hospital-count').innerText = hospital;
+    if(document.getElementById('mart-count')) document.getElementById('mart-count').innerText = mart;
+}
+
+// 기존 openDetail 함수 수정
+async function openDetail(propertyKey) {
+    const res = await fetch(`/listing/${propertyKey}/panel`, {
+        headers: { "X-Requested-With": "fetch" },
+    });
+
+    if (!res.ok) return;
+
+    const html = await res.text();
+    animateSwap(html);
+
+    // ✅ HTML이 교체된 후, 데이터에서 위경도를 추출해 인프라 정보 로드
+    // 서버 응답 HTML 내에 숨겨진 input이나 data 속성에서 위경도를 가져온다고 가정
+    setTimeout(() => {
+        const recenterBtn = document.querySelector(".panel-recenter");
+        if (recenterBtn) {
+            const lat = parseFloat(recenterBtn.getAttribute("data-lat"));
+            const lng = parseFloat(recenterBtn.getAttribute("data-lng"));
+            updateInfraStats(lat, lng);
+        }
+    }, 300); // 애니메이션 시간 고려
+}
