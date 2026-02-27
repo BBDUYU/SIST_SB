@@ -55,6 +55,8 @@ public class SecurityConfig {
                    // form login processing endpoint
                    new AntPathRequestMatcher("/login"),
 
+                   new AntPathRequestMatcher("/api/**"),
+                   
                    // dev
                    new AntPathRequestMatcher("/h2-console/**")
                ).permitAll()
