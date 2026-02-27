@@ -1,79 +1,59 @@
-// 하트 토글 기능
-document.addEventListener("DOMContentLoaded", function () {
-
-    document.querySelectorAll(".heart-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            const icon = this.querySelector("i");
-
-            if (icon.classList.contains("bi-heart")) {
-                icon.classList.remove("bi-heart");
-                icon.classList.add("bi-heart-fill");
-                icon.style.color = "#e11d48";
-            } else {
-                icon.classList.remove("bi-heart-fill");
-                icon.classList.add("bi-heart");
-                icon.style.color = "";
-            }
-        });
+// /static/js/main.js
+document.addEventListener("DOMContentLoaded", () => {
+  // ===== 1) 카카오 지도 =====
+  const mapContainer = document.getElementById("map");
+  if (mapContainer && window.kakao?.maps) {
+    const map = new kakao.maps.Map(mapContainer, {
+      center: new kakao.maps.LatLng(37.5665, 126.9780),
+      level: 5,
     });
 
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    // 카카오 지도 생성
-    const mapContainer = document.getElementById('map');
-
-    const mapOption = {
-        center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 시청
-        level: 5
-    };
-
-    const map = new kakao.maps.Map(mapContainer, mapOption);
-
-    // 테스트 마커
-    const markerPosition = new kakao.maps.LatLng(37.5665, 126.9780);
-
     const marker = new kakao.maps.Marker({
-        position: markerPosition
+      position: new kakao.maps.LatLng(37.5665, 126.9780),
     });
 
     marker.setMap(map);
-	
-	window.__MAIN_MAP__ = map;
-	window.__MAIN_MARKER__ = marker;
 
-});
+    window.__MAIN_MAP__ = map;
+    window.__MAIN_MARKER__ = marker;
+  }
 
-document.querySelector('.fab-noti')?.classList.add('has-noti');   // 점 켜기
-// document.querySelector('.fab-noti')?.classList.remove('has-noti'); // 점 끄기
+  // 알림 점(옵션)
+  document.querySelector(".fab-noti")?.classList.add("has-noti");
 
-(function () {
-  const panel = document.getElementById('panelContent');
+  // ===== 2) 좌측 패널 SPA (리스트 <-> 상세) =====
+  const panel = document.getElementById("panelContent");
   if (!panel) return;
 
-  // 최초 리스트 HTML 저장 (X 눌렀을 때 복귀)
+  // ✅ 리스트 화면 전체 백업(필터바 포함)
   const listHTML = panel.innerHTML;
 
-  // 패널 애니메이션 유틸
   function animateSwap(nextHTML) {
-    panel.classList.add('panel-anim');
-    panel.classList.add('panel-leave');
+    panel.classList.remove("panel-enter");
+    panel.classList.add("panel-anim", "panel-leave");
 
     setTimeout(() => {
       panel.innerHTML = nextHTML;
-      panel.classList.remove('panel-leave');
-      panel.classList.add('panel-enter');
 
-      // 다음 프레임에 enter 제거 -> 자연스럽게 들어옴
+      panel.classList.remove("panel-leave");
+      panel.classList.add("panel-enter");
+
       requestAnimationFrame(() => {
-        panel.classList.remove('panel-enter');
+        panel.classList.remove("panel-enter");
       });
     }, 210);
   }
 
   async function openDetail(propertyKey) {
-    const res = await fetch(`/listing/${propertyKey}/panel`, { headers: { 'X-Requested-With': 'fetch' } });
+    const res = await fetch(`/listing/${propertyKey}/panel`, {
+      headers: { "X-Requested-With": "fetch" },
+    });
+
+    if (!res.ok) {
+      console.error("패널 fetch 실패:", res.status);
+      return;
+    }
+
     const html = await res.text();
     animateSwap(html);
   }
@@ -82,49 +62,85 @@ document.querySelector('.fab-noti')?.classList.add('has-noti');   // 점 켜기
     animateSwap(listHTML);
   }
 
-  // 리스트 카드 클릭 -> 상세 패널 열기
-  document.addEventListener('click', (e) => {
-    // 하트 같은 버튼은 무시
-    if (e.target.closest('.heart-btn')) return;
+  // ===== 3) 전역 클릭 이벤트 위임(핵심) =====
+  document.addEventListener("click", (e) => {
+    // (A) 리스트 하트 토글 (.heart-btn)
+    const listHeartBtn = e.target.closest(".heart-btn");
+    if (listHeartBtn) {
+      e.preventDefault();
+      e.stopPropagation(); // house-item 클릭(openDetail) 방지
 
-    const item = e.target.closest('.house-item');
-    if (!item) return;
+      const icon = listHeartBtn.querySelector("i");
+      if (!icon) return;
 
-    const key = item.getAttribute('data-key');
-    if (!key) return;
+      if (icon.classList.contains("bi-heart")) {
+        icon.classList.remove("bi-heart");
+        icon.classList.add("bi-heart-fill");
+        icon.style.color = "#e11d48";
+      } else {
+        icon.classList.remove("bi-heart-fill");
+        icon.classList.add("bi-heart");
+        icon.style.color = "";
+      }
+      return;
+    }
 
-    e.preventDefault();
-    openDetail(key);
-  });
+    // (B) 상세 하트(SVG) 토글 (#btnHeart.iconBtn)
+    const detailHeartBtn = e.target.closest("#btnHeart.iconBtn");
+    if (detailHeartBtn) {
+      e.preventDefault();
+      e.stopPropagation();
 
-  // 상세 패널 X 버튼 -> 리스트 복귀
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.panel-close')) {
+      detailHeartBtn.classList.toggle("hearted");
+
+      const path = detailHeartBtn.querySelector("svg path");
+      if (!path) return;
+
+      const isOn = detailHeartBtn.classList.contains("hearted");
+      if (isOn) {
+        path.setAttribute("fill", "#DC2626");
+        path.setAttribute("stroke", "#DC2626");
+      } else {
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#0F172A");
+      }
+      return;
+    }
+
+    // (C) 리스트 카드 클릭 -> 상세 열기
+    const item = e.target.closest(".house-item");
+    if (item) {
+      const key = item.getAttribute("data-key");
+      if (!key) return;
+
+      e.preventDefault();
+      openDetail(key);
+      return;
+    }
+
+    // (D) 상세 패널 X 버튼 -> 리스트 복귀
+    if (e.target.closest(".panel-close")) {
       e.preventDefault();
       backToList();
+      return;
     }
-  });
 
-  // (옵션) 상세 패널의 "지도 이동" 버튼
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.panel-recenter');
-    if (!btn) return;
+    // (E) 상세 패널 "지도에서 매물 위치로 이동" + 핀 이동
+    const recenterBtn = e.target.closest(".panel-recenter");
+    if (recenterBtn) {
+      const lat = parseFloat(recenterBtn.getAttribute("data-lat"));
+      const lng = parseFloat(recenterBtn.getAttribute("data-lng"));
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
 
-    const lat = parseFloat(btn.getAttribute('data-lat'));
-    const lng = parseFloat(btn.getAttribute('data-lng'));
-    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      if (window.__MAIN_MAP__ && window.__MAIN_MARKER__ && window.kakao?.maps) {
+        const center = new kakao.maps.LatLng(lat, lng);
+        window.__MAIN_MAP__.setCenter(center);
+        window.__MAIN_MAP__.setLevel(3);
 
-    // main.js에서 만든 전역 map이 있다면 그걸 사용
-    if (window.__MAIN_MAP__ && window.kakao?.maps) {
-      const center = new kakao.maps.LatLng(lat, lng);
-      window.__MAIN_MAP__.setCenter(center);
-      window.__MAIN_MAP__.setLevel(3);
-	  
-	  // ✅ 핀도 같이 이동
-      if (window.__MAIN_MARKER__) {
         window.__MAIN_MARKER__.setPosition(center);
-        window.__MAIN_MARKER__.setMap(window.__MAIN_MAP__); // 혹시 숨겨져있을 수 있으니 보이게
+        window.__MAIN_MARKER__.setMap(window.__MAIN_MAP__);
       }
+      return;
     }
   });
 })();
