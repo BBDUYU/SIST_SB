@@ -1,0 +1,74 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: html(~{::section}, 'inquiry')">
+      
+<section>
+<link rel="stylesheet" th:href="@{/css/inquiry.css}">
+    <div class="container">
+        <!-- 상단 영역 -->
+        <div class="header">
+            <h1 class="title">새 문의 작성</h1>
+        </div>
+
+        <!-- 안내 박스 -->
+        <div class="notice-box">
+            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div class="notice-content">
+                <p class="notice-title"><strong>문의 작성 시 유의사항</strong></p>
+                <ul class="notice-list">
+                    <li>답변은 영업일 기준 1~2일 이내 마이페이지 문의로 답변이 등록됩니다.</li>
+                    <li>문의 내용을 상세히 작성해주시면 더 정확한 답변이 가능합니다.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 메인 카드 영역 -->
+        <div class="card">
+            <form id="inquiryForm">
+                <!-- 작성날짜 -->
+                <div class="form-group">
+                    <label class="label">작성날짜</label>
+                    <div class="date-display" id="createdDate"></div>
+                </div>
+
+                <!-- 제목 -->
+                <div class="form-group">
+                    <label for="title" class="label">제목</label>
+                    <input 
+                        type="text" 
+                        id="title" 
+                        name="title"
+                        class="input" 
+                        placeholder="문의 제목을 입력해주세요"
+                        required
+                    >
+                </div>
+
+                <!-- 내용 -->
+                <div class="form-group">
+                    <label for="content" class="label">내용</label>
+                    <textarea 
+                        id="content" 
+                        name="content"
+                        class="textarea" 
+                        placeholder="문의 내용을 상세히 입력해주세요"
+                        rows="10"
+                        required
+                    ></textarea>
+                </div>
+
+                <!-- 하단 버튼 영역 -->
+                <div class="button-group">
+                    <button type="button" class="btn btn-cancel" id="cancelBtn">취소</button>
+                    <button type="submit" class="btn btn-submit">문의 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:src="@{/js/inquiry.js}"></script>
+</section>
+</html>

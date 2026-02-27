@@ -228,26 +228,6 @@ function loadReviewData() {
       </div>
 
       <p class="review-content">${review.content}</p>
-
-      <!-- ✅ 여기(좋아요/댓글) 다시 추가 -->
-      <div class="review-actions">
-        <button class="action-btn" type="button" data-action="like" data-id="${review.id}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"></path>
-            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-          </svg>
-          <span class="like-count">${review.likes}</span>
-        </button>
-
-        <button class="action-btn" type="button" data-action="comment" data-id="${review.id}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <span class="comment-count">${review.comments}</span>
-        </button>
-      </div>
     </div>
   `).join('');
 }
@@ -419,14 +399,32 @@ document.addEventListener('click', function (e) {
 
   // 새 문의 작성
   if (e.target.classList.contains('btn-primary')) {
-    alert('새 문의 작성 페이지로 이동합니다.');
-    // window.location.href = '/inquiry/new';
+    // alert('새 문의 작성 페이지로 이동합니다.');
+    window.location.href = '/inquiry/new';
     return;
   }
 
   // 프로필 수정
   if (e.target.closest('.btn-edit')) {
-    alert('프로필 수정 페이지로 이동합니다.');
-    // window.location.href = '/profile/edit';
+    // alert('프로필 수정 페이지로 이동합니다.');
+    window.location.href = '/profile/edit';
   }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const statLinks = document.querySelectorAll("[data-go-tab]");
+
+  statLinks.forEach(el => {
+    el.addEventListener("click", () => {
+      const tabKey = el.getAttribute("data-go-tab");
+      if (!tabKey) return;
+
+      // ✅ 핵심: 탭 버튼을 "직접 클릭"해서 기존 로직(updateIndicator 포함)을 그대로 태움
+      const targetBtn = document.querySelector(`.tab-button[data-tab="${tabKey}"]`);
+      if (targetBtn) targetBtn.click();
+
+      // (선택) 화면 위 탭 위치로 스크롤하고 싶으면 주석 해제
+      // document.querySelector(".tab-container")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
 });
