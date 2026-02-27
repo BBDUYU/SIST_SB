@@ -1,0 +1,317 @@
+@charset "UTF-8";
+
+html{
+  overflow-y: scroll;          /* 구형/기본 안전장치 */
+  scrollbar-gutter: stable;    /* 최신: 레이아웃 흔들림 방지 */
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* 회원정보 수정 페이지 스타일 */
+
+/* CSS 변수 정의 */
+:root {
+  --color-primary: #1E3A8A;
+  --color-secondary: #8D8DB9;
+  --color-background: #F9F8FF;
+  --color-highlight: #FFF7D6;
+}
+
+/* 전역 스타일 초기화 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ⚠️ body가 위에 한 번 더 선언되어 있어도 문제는 없지만,
+   한 군데로 합쳐두는 게 깔끔합니다. */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* 컨테이너 (마이페이지와 시작점/폭/여백 통일) */
+.profile-edit-container {
+  background-color: var(--color-background);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  min-height: auto;
+}
+
+.profile-edit-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 상단 타이틀 영역 */
+.page-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.page-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1E3A8A;
+  margin-bottom: 12px;
+}
+
+.page-description {
+  font-size: 15px;
+  color: var(--color-secondary);
+  line-height: 1.6;
+}
+
+/* 메인 카드 */
+.profile-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 48px;
+  margin-bottom: 24px;
+}
+
+/* 폼 섹션 */
+.form-section {
+  margin-bottom: 40px;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 40px 0;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 24px;
+}
+
+/* 폼 그리드 */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+/* 폼 그룹 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  color: #1f2937;
+  background-color: white;
+  border: 1px solid var(--color-secondary);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.form-input:disabled,
+.form-input[readonly] {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+/* 에러 메시지 */
+.error-message {
+  font-size: 13px;
+  color: #dc2626;
+  margin-top: 6px;
+}
+
+/* 안내 박스 */
+.info-box {
+  background-color: var(--color-highlight);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.info-box-icon {
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-box-content {
+  flex: 1;
+}
+
+.info-box-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+.info-box-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #78350f;
+  line-height: 1.8;
+}
+
+/* =========================
+   버튼 영역 (회원탈퇴 왼쪽 / 취소+저장 오른쪽)
+   - 현재 HTML 구조:
+     <div class="button-group">
+       회원탈퇴 버튼
+       <div>취소 저장</div>
+     </div>
+========================= */
+
+.profile-edit-container .button-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 좌/우 분리 */
+  gap: 12px;
+  margin-top: 32px;
+}
+
+/* ✅ 오른쪽 버튼 묶음: button-group 바로 아래의 두 번째 div */
+.profile-edit-container .button-group > div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px; /* 취소-저장 간격 */
+}
+
+/* 공통 버튼 */
+.profile-edit-container .btn {
+  padding: 12px 32px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+/* 취소 */
+.profile-edit-container .btn-cancel {
+  background-color: white;
+  color: var(--color-secondary);
+  border: 1px solid var(--color-secondary);
+}
+
+.profile-edit-container .btn-cancel:hover {
+  background-color: #f9fafb;
+  border-color: #6b7280;
+  color: #6b7280;
+}
+
+/* 저장 */
+.profile-edit-container .btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: 1px solid var(--color-primary);
+}
+
+.profile-edit-container .btn-primary:hover {
+  background-color: #1e40af;
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25);
+}
+
+.profile-edit-container .btn-primary:active {
+  transform: translateY(1px);
+}
+
+/* ✅ 회원탈퇴 버튼 (왼쪽, 빨간 테두리) */
+.profile-edit-container .btn-danger-outline {
+  background-color: #fff;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-edit-container .btn-danger-outline:hover {
+  background: rgba(220, 38, 38, 0.06);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 32px 24px;
+  }
+
+  .page-title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-card {
+    padding: 24px 20px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  /* ✅ 모바일: 전체 세로로 */
+  .profile-edit-container .button-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* ✅ 오른쪽 묶음도 세로로(저장/취소 순서 원하는대로 조절 가능) */
+  .profile-edit-container .button-group > div {
+    flex-direction: column-reverse; /* 저장 아래/위 순서 바꾸고 싶으면 여기 조절 */
+    align-items: stretch;
+  }
+
+  .profile-edit-container .btn {
+    width: 100%;
+  }
+
+  .profile-edit-container .btn-danger-outline {
+    width: 100%;
+  }
+}
+
+/* 프로필 페이지 내부 스크롤 방지(해당 컨테이너만) */
+.profile-edit-container,
+.profile-edit-wrapper {
+  overflow: visible;
+  height: auto;
+}

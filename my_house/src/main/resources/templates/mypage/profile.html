@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: html(~{::section}, 'profile')">
+      
+<section>
+<link rel="stylesheet" th:href="@{/css/profile.css}">
+
+  <div class="profile-edit-container">
+    <div class="profile-edit-wrapper">
+
+      <div class="page-header">
+        <h1 class="page-title">회원정보 수정</h1>
+      </div>
+
+      <div class="profile-card">
+        <!-- 화면용: action은 일단 유지(POST 매핑 없으면 저장 시 404 날 수 있음) -->
+        <form action="/mypage/profile/update" method="post" id="profileForm">
+
+          <div class="form-section">
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label for="nickname" class="form-label">닉네임</label>
+                <input
+                  type="text"
+                  id="nickname"
+                  name="nickname"
+                  class="form-input"
+                  placeholder="닉네임을 입력하세요"
+                  required
+                />
+              </div>
+              
+              <div class="form-group">
+                <label for="email" class="form-label">이메일</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  class="form-input"
+                  value="test@email.com"
+                  readonly
+                />
+              </div>
+
+            </div>
+          </div>
+
+          <hr class="section-divider" />
+
+          <div class="form-section">
+            <h2 class="section-title">비밀번호 변경</h2>
+
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label for="currentPassword" class="form-label">현재 비밀번호</label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  name="currentPassword"
+                  class="form-input"
+                  placeholder="현재 비밀번호를 입력하세요"
+                  autocomplete="current-password"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="newPassword" class="form-label">새 비밀번호</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  name="newPassword"
+                  class="form-input"
+                  placeholder="새 비밀번호를 입력하세요"
+                  autocomplete="new-password"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="confirmPassword" class="form-label">새 비밀번호 확인</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  class="form-input"
+                  placeholder="새 비밀번호를 다시 입력하세요"
+                  autocomplete="new-password"
+                />
+              </div>
+
+            </div>
+
+            <div class="info-box">
+              <div class="info-box-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </div>
+              <div class="info-box-content">
+                <div class="info-box-title">비밀번호 안내</div>
+                <ul class="info-box-list">
+                  <li>8자 이상 입력해주세요.</li>
+                  <li>영문, 숫자, 특수문자를 조합하여 사용하세요.</li>
+                  <li>개인정보와 관련된 비밀번호는 사용하지 마세요.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="button-group">
+            <button type="button" class="btn btn-danger-outline">회원탈퇴</button>
+            
+            <div>
+	            <button type="button" class="btn btn-cancel" onclick="handleCancel()">취소</button>
+	            <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script th:src="@{/js/profile.js}"></script>
+</section>
+</html>

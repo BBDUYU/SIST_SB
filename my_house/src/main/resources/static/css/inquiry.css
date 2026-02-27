@@ -1,0 +1,196 @@
+@charset "UTF-8";
+
+html{
+  overflow-y: scroll;          /* 구형/기본 안전장치 */
+  scrollbar-gutter: stable;    /* 최신: 레이아웃 흔들림 방지 */
+}
+
+body {
+    overflow-x: hidden;
+}
+
+/* =========================
+   문의 작성 페이지 전용 스타일
+   (전역 절대 안 건드림)
+   ========================= */
+
+/* 컨테이너 */
+section > .container {
+    max-width: 896px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+/* 상단 영역 */
+section .header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+section .title {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 12px;
+}
+
+/* 안내 박스 */
+section .notice-box {
+    background-color: #FFF7D6;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+section .notice-box .icon {
+    color: #B8860B;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+section .notice-content {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+section .notice-title {
+    margin-bottom: 8px;
+}
+
+section .notice-list {
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+section .notice-list li {
+    margin-bottom: 4px;
+}
+
+/* 카드 */
+section .card {
+    background-color: #FFFFFF;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* 폼 그룹 */
+section .form-group {
+    margin-bottom: 32px;
+}
+
+section .form-group:last-of-type {
+    margin-bottom: 40px;
+}
+
+/* 라벨 */
+section .label {
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+/* 날짜 표시 */
+section .date-display {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #F9F8FF;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+/* 인풋 */
+section .input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #8D8DB9;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+section .input:focus {
+    border-color: #1E3A8A;
+}
+
+/* 텍스트에리어 */
+section .textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #8D8DB9;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.6;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+    font-family: inherit;
+}
+
+section .textarea:focus {
+    border-color: #1E3A8A;
+}
+
+/* 버튼 영역 */
+section .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid #E5E5E5;
+}
+
+/* 버튼 */
+section .btn {
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+}
+
+/* 취소 */
+section .btn-cancel {
+    background-color: transparent;
+    border: 1px solid #8D8DB9;
+}
+
+/* 제출 */
+section .btn-submit {
+    background-color: #1E3A8A;
+    color: #FFFFFF;
+}
+
+section .btn-submit:hover {
+    background-color: #1E40AF;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    section > .container {
+        padding: 24px 16px;
+    }
+
+    section .card {
+        padding: 24px;
+    }
+
+    section .title {
+        font-size: 24px;
+    }
+
+    section .button-group {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    section .btn {
+        width: 100%;
+    }
+}

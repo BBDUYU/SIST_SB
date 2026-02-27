@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>마이페이지</title>
-  <link rel="stylesheet" th:href="@{/css/mypage.css}">
-</head>
-<body>
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: html(~{::section}, 'mypage')">
+      
+<section>
+<link rel="stylesheet" th:href="@{/css/mypage.css}">
+
 <div class="container">
 
   <div class="header">
@@ -33,14 +31,15 @@
   <div class="card">
     <div class="card-header">
       <h3 class="card-title">프로필 정보</h3>
-      <button class="btn-edit">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 20h9"></path>
-          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-        </svg>
-        수정
-      </button>
+	      <a th:href="@{/mypage/profile}" class="btn-edit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+            </svg>
+            수정
+          </a>
     </div>
 
     <div class="profile-info">
@@ -52,7 +51,7 @@
       </div>
 
       <div class="profile-text">
-        <p class="profile-name">김철수</p>
+        <p class="profile-nickname">히히</p>
       </div>
     </div>
 
@@ -62,49 +61,32 @@
           <path d="M4 4h16v16H4z"></path>
           <polyline points="22,6 12,13 2,6"></polyline>
         </svg>
-        <span>chulsoo.kim@email.com</span>
+        <span>hh1234@email.com</span>
       </div>
-
-      <div class="info-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 16.92V19a2 2 0 0 1-2.18 2
-                   19.79 19.79 0 0 1-8.63-3.07
-                   19.5 19.5 0 0 1-6-6
-                   A19.79 19.79 0 0 1 3 4.18
-                   2 2 0 0 1 5 2h2.09
-                   a2 2 0 0 1 2 1.72
-                   c.12.81.37 1.6.72 2.34
-                   a2 2 0 0 1-.45 2.11
-                   L8.09 9.91
-                   a16 16 0 0 0 6 6
-                   l1.74-1.27
-                   a2 2 0 0 1 2.11-.45
-                   c.74.35 1.53.6 2.34.72
-                   a2 2 0 0 1 1.72 2z"></path>
-        </svg>
-        <span>010-1234-5678</span>
 	    </div>
-	    </div>
-	  </div> <!-- ✅✅✅ 프로필 card 닫기(이게 빠져서 합쳐졌던 거) -->
+	  </div>
 
 	  <!-- ✅ 활동 통계 카드 (2번 카드) -->
 	  <div class="card">
-	    <h3 class="card-title">활동 통계</h3>
-	    <div class="stats-grid">
-	      <div class="stat-item">
-	        <p class="stat-number">24</p>
-	        <p class="stat-label">최근 본 매물</p>
-	      </div>
-	      <div class="stat-item">
-	        <p class="stat-number">8</p>
-	        <p class="stat-label">작성한 리뷰</p>
-	      </div>
-	      <div class="stat-item">
-	        <p class="stat-number">3</p>
-	        <p class="stat-label">문의 내역</p>
-	      </div>
-	    </div>
-	  </div>
+		  <h3 class="card-title">활동 통계</h3>
+		
+		  <div class="stats-grid">
+		    <button type="button" class="stat-item stat-link" data-go-tab="recent">
+		      <p class="stat-number">24</p>
+		      <p class="stat-label">최근 본 매물</p>
+		    </button>
+		
+		    <button type="button" class="stat-item stat-link" data-go-tab="review">
+		      <p class="stat-number">8</p>
+		      <p class="stat-label">작성한 리뷰</p>
+		    </button>
+		
+		    <button type="button" class="stat-item stat-link" data-go-tab="inquiry">
+		      <p class="stat-number">3</p>
+		      <p class="stat-label">문의 내역</p>
+		    </button>
+		  </div>
+		</div>
 	
 	</div>
 
@@ -191,12 +173,12 @@
 
       <div class="inquiry-list"></div>
 
-      <button class="btn-primary">새 문의 작성하기</button>
+      <a th:href="@{/mypage/inquiry}" class="btn-primary">새 문의 작성하기</a>
     </div>
 
   </div>
 </div>
 
 <script th:src="@{/js/mypage.js}"></script>
-</body>
+</section>
 </html>
