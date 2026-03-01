@@ -146,6 +146,18 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 
 // --- [LH 공고 핀 & 안심귀갓길 통합 로직] ---
+
+let cctvMarkers = []; // 기존 마커 관리를 위한 배열
+let cctvInfoWindows = [];
+let noticeMarkers = [];    
+let safePolylines = [];
+
+const filterStatus = {
+    notice: true,
+    safePath: true,
+    cctv: true
+};
+
 document.addEventListener("DOMContentLoaded", function () {
     // 위에서 생성된 window.__MAIN_MAP__이 잡힐 때까지 잠시 대기하거나 바로 실행
     const checkMap = setInterval(() => {
@@ -181,16 +193,18 @@ function initAdditionalLayers(map) {
 		
 	kakao.maps.event.addListener(map, 'idle', () => {
 	// 줌 레벨이 일정 수준(예: 4이하)으로 낮을 때만 CCTV 표시 (너무 많으면 느려짐)
-        if (map.getLevel() <= 4) {
-            updateCctvMarkers(map);
-        } else {
-            cctvMarkers.forEach(m => m.setMap(null)); // 멀리서 볼 땐 끄기
-        }
+		if (filterStatus.cctv && map.getLevel() <= 2) {
+	        updateCctvMarkers(map);
+	    } else {
+	        // 필터가 꺼져있거나 너무 멀면 마커 지우기
+	        cctvMarkers.forEach(m => m.setMap(null));
+	        cctvInfoWindows.forEach(iw => iw.close());
+	    }
     });
 }
 
-let cctvMarkers = []; // 기존 마커 관리를 위한 배열
-let cctvInfoWindows = [];
+
+
 function updateCctvMarkers(map) {
     const bounds = map.getBounds();
     const sw = bounds.getSouthWest();
@@ -269,7 +283,6 @@ function displayLhMarker(notice, map) {
         position: position
     });
 
-    // 마커 위에 둥둥 떠있는 유형 텍스트
     const content = `
         <div style="background: white; border: 1px solid #28a745; padding: 2px 6px; 
                     font-size: 11px; font-weight: bold; color: #28a745;
@@ -278,11 +291,14 @@ function displayLhMarker(notice, map) {
             ${notice.aisTpCdNm}
         </div>`;
     
-    new kakao.maps.CustomOverlay({
+    const overlay = new kakao.maps.CustomOverlay({
         position: position,
         content: content,
         map: map
     });
+
+    // ✅ 필터 제어를 위해 배열에 저장
+    noticeMarkers.push({ marker, overlay });
 
     const iwContent = `
         <div style="padding:15px; width:250px;">
@@ -320,13 +336,13 @@ function drawSafePolyline(path, map) {
         });
 
         polyline.setMap(map);
+        
+        // ✅ 필터 제어를 위해 배열에 저장
+        safePolylines.push(polyline);
 
-        // --- 1. 주소 정보 조립 (있는 데이터만 합치기) ---
-        // sigungu, bjdName, detailLocation 순서
         const addressParts = [path.sigungu, path.bjdName, path.detailLocation];
         const fullAddr = addressParts.filter(part => part && part !== 'null' && part.trim() !== '').join(' ');
 
-        // --- 2. 호버 시 나타날 툴팁 생성 ---
         const tooltipContent = `
             <div class="safe-tooltip" style="background: rgba(0, 0, 0, 0.85); color: white; padding: 10px 15px; border-radius: 10px; font-size: 12px; pointer-events: none; z-index: 1000; min-width: 180px;">
                 <div style="font-weight: bold; margin-bottom: 6px; color: #2ECC71; border-bottom: 1px solid #444; padding-bottom: 4px;">
@@ -346,20 +362,16 @@ function drawSafePolyline(path, map) {
             yAnchor: 1.3  
         });
 
-
-        // 마우스 올렸을 때
         kakao.maps.event.addListener(polyline, 'mouseover', function(mouseEvent) {
             polyline.setOptions({ strokeOpacity: 1.0, strokeWeight: 8, strokeColor: '#27AE60' });
             tooltip.setPosition(mouseEvent.latLng);
             tooltip.setMap(map);
         });
 
-        // 마우스 움직일 때 (커서 따라다니기)
         kakao.maps.event.addListener(polyline, 'mousemove', function(mouseEvent) {
             tooltip.setPosition(mouseEvent.latLng);
         });
 
-        // 마우스 나갔을 때
         kakao.maps.event.addListener(polyline, 'mouseout', function() {
             polyline.setOptions({ strokeOpacity: 0.7, strokeWeight: 6, strokeColor: '#2ECC71' });
             tooltip.setMap(null);
@@ -423,4 +435,41 @@ async function openDetail(propertyKey) {
             updateInfraStats(lat, lng);
         }
     }, 300); // 애니메이션 시간 고려
+}
+
+
+// 필터 버튼 클릭 이벤트 제어
+document.addEventListener("click", (e) => {
+    const chip = e.target.closest(".filter-chip");
+    if (!chip) return;
+
+    const filterType = chip.getAttribute("data-filter"); // notice, safePath, cctv
+    const isActive = chip.classList.toggle("active"); // 클래스 토글
+    
+    filterStatus[filterType] = isActive; // 상태 업데이트
+    applyFilter(filterType, isActive);   // 지도에 반영
+});
+
+// 실제 지도 객체들을 숨기거나 보여주는 함수
+function applyFilter(type, show) {
+    const map = window.__MAIN_MAP__;
+    if (!map) return;
+
+    const targetMap = show ? map : null;
+
+    if (type === 'notice') {
+        noticeMarkers.forEach(obj => {
+            obj.marker.setMap(targetMap);
+            obj.overlay.setMap(targetMap);
+        });
+    } else if (type === 'safePath') {
+        safePolylines.forEach(line => line.setMap(targetMap));
+    } else if (type === 'cctv') {
+        if (!show) {
+            cctvMarkers.forEach(m => m.setMap(null));
+            cctvInfoWindows.forEach(iw => iw.close());
+        } else {
+            updateCctvMarkers(map); // 켜면 즉시 호출
+        }
+    }
 }
