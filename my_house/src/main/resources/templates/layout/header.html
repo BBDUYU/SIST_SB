@@ -36,15 +36,15 @@
 
         <!-- 로그인 전 -->
         <li class="nav-item" th:if="${isLogin == false}">
-          <a class="btn btn-login-pill" href="/member/login">로그인</a>
+          <a class="btn btn-login-pill" href="/user/login">로그인</a>
         </li>
         <li class="nav-item" th:if="${isLogin == false}">
-          <a class="nav-link text-white" href="/member/signup">회원가입</a>
+          <a class="nav-link text-white" href="/user/signup">회원가입</a>
         </li>
 
         <!-- 로그인 후 -->
         <li class="nav-item" th:if="${isLogin == true}">
-          <a class="nav-link text-white" href="/member/logout">로그아웃</a>
+          <a class="nav-link text-white" href="/user/logout">로그아웃</a>
         </li>
         <li class="nav-item" th:if="${isLogin == true}">
           <a class="nav-link text-white" href="/mypage">마이페이지</a>

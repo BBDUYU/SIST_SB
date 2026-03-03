@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: html(~{::main}, '인증번호 확인')}">
+
+<main class="page">
+  <link rel="stylesheet" th:href="@{/css/sign.css}">
+  <section class="card" aria-label="인증번호 확인 카드">
+    <h1 class="title">인증번호 확인</h1>
+
+    <div class="find-container">
+      <p class="guide-text center-text mb-40">
+        <span id="displayPhone" th:text="${phone}">010-1234-5678</span>로 전송된<br>
+        인증번호 숫자를 입력해주세요.
+      </p>
+
+      <p th:if="${error}" class="error-text center-text mb-20" th:text="${error}" style="color: red; font-size: 0.9em;"></p>
+
+      <form th:action="@{/user/find-id-verify}" method="post" id="verifyForm">
+        
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        
+        <input type="hidden" id="phoneData" name="phone" th:value="${phone}" />
+        <input type="hidden" id="csrfToken" th:value="${_csrf.token}" />
+        <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}" />
+        
+        <div class="input-group">
+          <div style="position: relative;">
+            <input class="input center-text focus-line" 
+                   type="text" 
+                   name="code" 
+                   placeholder="인증번호 입력" 
+                   maxlength="6" 
+                   required />
+            <span id="timer" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #ff4d4f; font-weight: bold;">03:00</span>
+          </div>
+
+          <div class="resend-box" style="text-align: right; margin-top: 10px;">
+            <button type="button" id="resendBtn" class="link-btn" style="font-size: 0.85em; cursor: pointer;">재전송 받기</button>
+          </div>
+        </div>
+
+        <button class="primary" type="submit" id="submitBtn" style="margin-top: 20px;">다음</button>
+      </form> </div>
+  </section>
+
+  <script th:src="@{/js/find-id-verify.js}" defer></script>
+</main>
+</html>
