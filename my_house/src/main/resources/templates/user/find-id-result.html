@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: html(~{::main}, '아이디 찾기 결과')}">
+
+<main class="page">
+    <link rel="stylesheet" th:href="@{/css/sign.css}">
+    
+    <section class="card" aria-label="아이디 찾기 결과 카드">
+        <h1 class="title">아이디 찾기 결과</h1>
+
+        <div class="find-container">
+            <p class="guide-text center-text">
+                <span class="highlight-phone" th:text="${phone}">010-1234-5678</span> 번호로<br>
+                가입된 이메일 정보입니다.
+            </p>
+
+            <div class="result-box">
+                <p class="found-email" th:text="${email}">mjb****@naver.com</p>
+                <span class="reg-date" th:if="${createdAt != null}">
+                    가입일: <span th:text="${#temporals.format(createdAt, 'yyyy-MM-dd')}">2024-01-01</span>
+                </span>
+            </div>
+
+            <div class="btn-row">
+                <a th:href="@{/user/find-password}" class="sub-btn-link flex-1 center-flex">비밀번호 찾기</a>
+                <a th:href="@{/login}" class="primary flex-1 center-flex">로그인</a>
+            </div>
+        </div>
+    </section>
+</main>
+</html>

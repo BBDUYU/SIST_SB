@@ -36,67 +36,81 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String providerId = userInfo.getProviderId();
         if (providerId == null || providerId.isBlank()) {
-            throw new OAuth2AuthenticationException(new OAuth2Error("invalid_provider_id"),
-                    "ProviderId를 가져올 수 없습니다.");
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("invalid_provider_id"),
+                "ProviderId를 가져올 수 없습니다."
+            );
         }
 
-        String email = userInfo.getEmail();
-        // 네 엔티티 email NOT NULL + UNIQUE라서, 이메일 없으면 가입 불가로 처리(정석)
-        if (email == null || email.isBlank()) {
-            throw new OAuth2AuthenticationException(new OAuth2Error("email_not_found"),
-                    "이메일 제공 동의가 필요합니다. (카카오는 account_email scope/동의항목 확인)");
+        // ✅ 이메일 필수 정책(현재 너 코드 정책 그대로)
+        String emailRaw = userInfo.getEmail();
+        if (emailRaw == null || emailRaw.isBlank()) {
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("email_not_found"),
+                "이메일 제공 동의가 필요합니다."
+            );
         }
+        final String email = emailRaw.trim().toLowerCase();
 
-        String nickname = Optional.ofNullable(userInfo.getNickname()).orElse("사용자");
-        String name = Optional.ofNullable(userInfo.getName()).orElse(nickname);
+        String nickname = Optional.ofNullable(userInfo.getNickname()).orElse("사용자").trim();
+        String name = Optional.ofNullable(userInfo.getName()).orElse(nickname).trim();
 
         // 1) provider + providerId로 우선 조회
         User user = userRepository.findByProviderAndProviderId(provider, providerId)
-                .orElseGet(() -> {
-                    // 2) email로 기존 계정이 있으면 정책 결정이 필요
-                    //    - 여기서는 "email이 이미 있으면 그 계정에 provider/providerId를 붙여서 연동"하는 쪽으로 처리
-                    Optional<User> byEmail = userRepository.findByEmail(email);
-                    if (byEmail.isPresent()) {
-                        User existing = byEmail.get();
-                        existing.setProvider(provider);
-                        existing.setProviderId(providerId);
-                        // 닉네임이 비어있으면 업데이트
-                        if (existing.getNickname() == null || existing.getNickname().isBlank()) {
-                            existing.setNickname(nickname);
-                        }
-                        return existing;
+            .orElseGet(() -> {
+
+                // 2) ✅ 같은 이메일의 LOCAL 계정이 있으면 소셜 연동
+                Optional<User> byEmail = userRepository.findByEmailAndDeletedAtIsNull(email);
+                if (byEmail.isPresent()) {
+                    User existing = byEmail.get();
+
+                    // 이미 다른 소셜로 묶여있으면 차단(정책)
+                    if (existing.getProvider() != null
+                            && existing.getProvider() != Provider.LOCAL
+                            && existing.getProvider() != provider) {
+                        throw new OAuth2AuthenticationException(
+                            new OAuth2Error("already_linked"),
+                            "이미 다른 소셜로 가입된 이메일입니다. 기존 방식으로 로그인해주세요."
+                        );
                     }
 
-                    // 3) 신규 생성
-                    User created = new User();
-                    created.setEmail(email);
-                    created.setNickname(nickname);
+                    existing.setProvider(provider);
+                    existing.setProviderId(providerId);
 
-                    // ⚠️ 현재 엔티티가 NOT NULL이라 임시값 세팅
-                    created.setName(name);
-                    created.setPhone("000-0000-0000"); // TODO: 추후 추가입력 플로우로 교체 권장
+                    if (existing.getNickname() == null || existing.getNickname().isBlank()) {
+                        existing.setNickname(nickname);
+                    }
+                    if (existing.getName() == null || existing.getName().isBlank()) {
+                        existing.setName(name);
+                    }
 
-                    created.setProvider(provider);
-                    created.setProviderId(providerId);
+                    return existing;
+                }
 
-                    created.setPassword(null); // 소셜은 null
-                    created.setRole("ROLE_USER");
+                // 3) 신규 생성(소셜 간편가입)
+                User created = new User();
+                created.setEmail(email);
+                created.setNickname(nickname);
+                created.setName(name);
 
-                    // status/createdAt은 엔티티 기본값 사용
-                    return created;
-                });
+                created.setProvider(provider);
+                created.setProviderId(providerId);
+
+                created.setPassword(null); // 소셜은 null
+                created.setRole("ROLE_USER");
+
+                // phone은 회원가입에서 안 받으니 null 유지
+                return created;
+            });
 
         userRepository.save(user);
 
-        // SecurityContext에 들어갈 OAuth2User 반환
-        // nameAttributeKey는 provider별로 다를 수 있는데, 여기서는 providerId로 통일해도 무방
-        Map<String, Object> attrs = oauth2User.getAttributes();
-
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(user.getRole())),
-                attrs,
-                userRequest.getClientRegistration().getProviderDetails()
-                        .getUserInfoEndpoint().getUserNameAttributeName()
+            Collections.singleton(new SimpleGrantedAuthority(user.getRole())),
+            oauth2User.getAttributes(),
+            userRequest.getClientRegistration().getProviderDetails()
+                .getUserInfoEndpoint()
+                .getUserNameAttributeName()
         );
     }
 
@@ -105,8 +119,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             case "kakao" -> Provider.KAKAO;
             case "naver" -> Provider.NAVER;
             case "google" -> Provider.GOOGLE;
-            default -> throw new OAuth2AuthenticationException(new OAuth2Error("unsupported_provider"),
-                    "지원하지 않는 provider: " + registrationId);
+            default -> throw new OAuth2AuthenticationException(
+                new OAuth2Error("unsupported_provider"),
+                "지원하지 않는 provider: " + registrationId
+            );
         };
     }
 
@@ -115,8 +131,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             case "google" -> new GoogleUserInfo(attributes);
             case "naver" -> new NaverUserInfo(attributes);
             case "kakao" -> new KakaoUserInfo(attributes);
-            default -> throw new OAuth2AuthenticationException(new OAuth2Error("unsupported_provider"),
-                    "지원하지 않는 provider: " + registrationId);
+            default -> throw new OAuth2AuthenticationException(
+                new OAuth2Error("unsupported_provider"),
+                "지원하지 않는 provider: " + registrationId
+            );
         };
     }
 }

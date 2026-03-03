@@ -1,0 +1,240 @@
+:root {
+  --primary-500: #1E3A8A;
+  --primary-200: #8D8DB9;
+  --bg: #F9F8FF;
+  --text: #1C2127;
+  --muted: #6B7280;
+  --line: #E5E7EB;
+  --card: #FFFFFF;
+  --radius: 16px;
+}
+
+/* 1. 화면 전체를 상하좌우 정중앙으로 배치 */
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;     /* 상하 중앙 정렬 */
+  justify-content: center;  /* 좌우 중앙 정렬 */
+  background: var(--bg);
+  padding: 20px;
+}
+
+/* 2. 카드 디자인: 로그인/회원가입과 동일한 규격 */
+.card {
+  width: 100%;
+  max-width: 520px;         /* 너비를 520px로 확장 */
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 56px 48px;       /* 내부 여백 상하좌우 균형 조절 */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. 제목 정렬 */
+.title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 40px;      /* 제목과 안내문구 사이 여백 */
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+/* 4. 아이디 찾기 컨테이너 및 폼 확장 */
+.find-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.find-container form {
+  width: 100%;             /* 폼 너비 100% 사용 */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 5. 가이드 문구: 핸드폰번호 입력 바로 위 정렬 */
+.guide-text.center-text {
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 32px;      /* 입력창과 문구 사이 간격 */
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* 6. 입력창 스타일: 중앙 정렬 및 가독성 확장 */
+.input.center-text {
+  width: 100%;
+  height: 54px;
+  text-align: center;
+  font-size: 18px !important;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #F3F4FF;      /* 기존 인풋 컬러와 통일 */
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input.center-text:focus {
+  border-color: var(--primary-500);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(30,58,138,.10);
+}
+
+/* 7. 다음 버튼: 중앙 및 너비 확장 */
+.primary {
+  width: 100%;
+  height: 54px;
+  background: var(--primary-500);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.primary:hover { filter: brightness(0.95); }
+.primary:active { transform: translateY(1px); }
+
+/* 8. 결과 페이지 전용 스타일 */
+.result-box {
+  width: 100%;
+  margin: 30px 0;
+  padding: 30px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.found-email {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* 8. 결과 페이지 전용 스타일 - 가로 정렬 및 텍스트 중앙화 */
+.btn-row {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  align-items: stretch; /* 두 버튼의 높이를 동일하게 맞춤 */
+}
+
+.btn-row .primary {
+  flex: 1;                /* 추가: 비밀번호 찾기 버튼과 1:1 비율로 너비 나눔 */
+  width: auto;            /* 수정: 기존 100% 설정을 해제하여 옆으로 붙게 함 */
+  margin-top: 0;          /* 수정: 기존 상단 마진 제거하여 높이 맞춤 */
+  display: flex;          /* 텍스트 중앙 정렬 시작 */
+  align-items: center;    
+  justify-content: center; 
+  text-decoration: none;  
+}
+
+.sub-btn-link {
+  flex: 1;                /* 비밀번호 찾기 버튼도 1:1 비율 유지 */
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-200);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.flex-1 { flex: 1; }
+
+/* 9. 재전송 링크 */
+.resend-box {
+  width: 100%;
+  text-align: center;     /* 수정: 우측 정렬에서 중앙 정렬로 변경 */
+  margin: 5px 0 15px 0;   /* 수정: 상하 여백을 주어 겹침 방지 및 위치 조정 */
+}
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  text-decoration: underline;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* 비밀번호 찾기 전용 추가 간격 */
+.mb-40 {
+  margin-bottom: 40px !important;
+}
+
+.mt-20 {
+  margin-top: 20px !important;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 안내 문구 강조 */
+.find-container .guide-text {
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+/* 이메일 입력창 강조 */
+.input.center-text:focus {
+  background-color: #fff;
+  border-color: var(--primary-500);
+}
+
+/* 회원탈퇴 전용 스타일 */
+.withdraw-notice {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.withdraw-notice li {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 8px;
+  position: relative;
+  padding-left: 15px;
+}
+
+.withdraw-notice li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--primary-200);
+}
+
+.withdraw-notice li.important {
+  color: #DC2626; /* 강조 메시지 빨간색 */
+  font-weight: 700;
+}
+
+.mb-20 { margin-bottom: 20px !important; }
+.mb-30 { margin-bottom: 30px !important; }
+
+/* 탈퇴 버튼용 아웃라인 스타일 */
+.border-only {
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  color: var(--muted) !important;
+}
+
+.border-only:hover {
+  background: #fff0f0 !important;
+  color: #DC2626 !important;
+  border-color: #DC2626 !important;
+}

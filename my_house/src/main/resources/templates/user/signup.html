@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: html(~{::main}, '회원가입')}">
+
+<main class="page">
+  <link rel="stylesheet" th:href="@{/css/signup.css}">
+  <section class="card" aria-label="회원가입 카드">
+    <h1 class="title">회원가입</h1>
+
+    <p class="sns-title">SNS계정으로 간편하게 시작하기</p>
+    <div class="sns-row">
+      <a class="sns-btn" th:href="@{/oauth2/authorization/kakao}">
+        <img th:src="@{/image/auth/kakao.png}" alt="카카오">
+      </a>
+      <a class="sns-btn" th:href="@{/oauth2/authorization/google}">
+        <img th:src="@{/image/auth/google.png}" alt="구글">
+      </a>
+      <a class="sns-btn" th:href="@{/oauth2/authorization/naver}">
+        <img th:src="@{/image/auth/naver.jpg}" alt="네이버">
+      </a>
+    </div>
+
+    <hr class="divider">
+
+    <form th:action="@{/user/signup}" method="post" id="signupForm">
+      <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}" />
+      <input type="hidden" id="csrfToken" th:value="${_csrf.token}" />
+
+      <div class="input-group">
+        <label class="label" for="email">이메일</label>
+        <div class="input-with-btn">
+          <input class="input" id="email" type="email" name="email" placeholder="이메일 주소" required />
+          <button type="button" id="sendCodeBtn" class="sub-btn">인증하기</button>
+        </div>
+      </div>
+
+      <div id="verificationArea" class="verification-area" style="display: none;">
+        <div class="verify-box">
+          <p class="verify-guide">이메일로 받은 인증코드를 입력해주세요.</p>
+          <div class="verify-input-wrapper">
+            <input class="input verify-input" id="authCode" type="text" placeholder="인증코드 6자리" maxlength="6" />
+            <span id="timer" class="timer">03:00</span>
+            <button type="button" id="verifyCodeBtn" class="verify-confirm-btn">확인</button>
+          </div>
+          <p class="resend-text">이메일을 받지 못하셨나요? <button type="button" id="resendBtn" class="resend-link">이메일 재전송하기</button></p>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="label" for="password">비밀번호</label>
+        <p class="guide-text">영문, 숫자, 특수문자를 포함한 8~20자로 입력해주세요.</p>
+        <input class="input" id="password" type="password" name="password" placeholder="비밀번호" required />
+      </div>
+
+      <div class="input-group">
+        <label class="label" for="passwordConfirm">비밀번호 확인</label>
+        <input class="input" id="passwordConfirm" type="password" name="passwordConfirm" placeholder="비밀번호 확인" required />
+      </div>
+
+      <div class="terms-container">
+        <label class="label">약관 동의</label>
+        <div class="terms-box">
+          <div class="term-item all-agree">
+            <label>
+              <input type="checkbox" id="checkAll">
+              <strong>전체동의</strong>
+            </label>
+          </div>
+          <div class="term-item">
+            <label>
+              <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+              이용약관 (필수)
+            </label>
+          </div>
+          <div class="term-item">
+            <label>
+              <input type="checkbox" id="agreePrivacy" name="agreePrivacy" required>
+              개인정보 수집 및 이용 동의 (필수)
+            </label>
+          </div>
+          <div class="term-item">
+            <label>
+              <input type="checkbox" id="agreeMarketing" name="agreeMarketing">
+              광고성 수신 동의 (선택)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button class="primary signup-submit" type="submit" id="submitBtn" disabled>
+        회원가입하기
+      </button>
+    </form>
+
+    <p class="footer-link">
+      이미 아이디가 있으신가요? <a th:href="@{/user/login}">로그인</a>
+    </p>
+  </section>
+  
+  <script th:src="@{/js/signup.js}" defer></script>
+</main>
+</html>
