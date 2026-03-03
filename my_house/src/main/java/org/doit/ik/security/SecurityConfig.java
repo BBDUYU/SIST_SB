@@ -32,6 +32,8 @@ public class SecurityConfig {
                    new AntPathRequestMatcher("/listing/{propertyKey}/panel"),
                    new AntPathRequestMatcher("/board/**"),
                    new AntPathRequestMatcher("/error"),
+                   
+                   new AntPathRequestMatcher("/mypage/**"),
 
                    // auth pages
                    new AntPathRequestMatcher("/user/login"),
