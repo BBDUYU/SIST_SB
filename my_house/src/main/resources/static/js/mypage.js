@@ -1,4 +1,4 @@
-// mypage.js (더미 제거 + 리뷰 바 0% 색 제거)
+// mypage.js (정리본: 더미 제거 + 탭 + 통계탭 이동 + 하트토글 + 리뷰바 0% 색 제거)
 
 document.addEventListener('DOMContentLoaded', function () {
   const tabButtons = document.querySelectorAll('.tab-button');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ✅ 통계(활동통계) 클릭 시 해당 탭으로 이동
+  // 활동 통계 클릭 -> 해당 탭으로 이동
   document.querySelectorAll('[data-go-tab]').forEach(el => {
     el.addEventListener('click', () => {
       const tabKey = el.getAttribute('data-go-tab');
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ✅ 리뷰 막대(퍼센트) 초기화: 0%면 색 제거(.has-value 제거)
+  // 리뷰 막대(퍼센트) 초기화: 0%면 색 제거(.has-value 제거)
   initReviewBars();
 
   function getActiveTabIndex() {
@@ -58,10 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const pct = document.getElementById('percent' + i);
       if (!bar || !pct) continue;
 
-      // 퍼센트 텍스트(예: "0%")에서 숫자만 추출
       const v = Number(String(pct.textContent).replace('%', '').trim()) || 0;
-
-      // width 반영 + 0이면 색 제거
       bar.style.width = v + '%';
       bar.classList.toggle('has-value', v > 0);
     }
