@@ -60,6 +60,9 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/images/**"),
                     new AntPathRequestMatcher("/oauth2/**"),
                     new AntPathRequestMatcher("/login/**"),
+                    new AntPathRequestMatcher("/api/**"),                    
+                    new AntPathRequestMatcher("/api/**"),                    
+                    new AntPathRequestMatcher("/listing/**"),                    
                     new AntPathRequestMatcher("/h2-console/**")
                 ).permitAll()
 
