@@ -29,6 +29,8 @@ public class SecurityConfig {
                    // public pages
                    new AntPathRequestMatcher("/"),
                    new AntPathRequestMatcher("/main"),
+                   new AntPathRequestMatcher("/listing/{propertyKey}/panel"),
+                   new AntPathRequestMatcher("/board/**"),
                    new AntPathRequestMatcher("/error"),
                    
                    new AntPathRequestMatcher("/mypage/**"),
@@ -57,8 +59,13 @@ public class SecurityConfig {
                    // form login processing endpoint
                    new AntPathRequestMatcher("/login"),
 
+                   new AntPathRequestMatcher("/api/**"),
+                   
+                   new AntPathRequestMatcher("/listing/{propertyKey}/panel"),
+                   
                    // dev
                    new AntPathRequestMatcher("/h2-console/**")
+                   
                ).permitAll()
                .anyRequest().authenticated()
            )
