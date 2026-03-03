@@ -41,6 +41,7 @@ public class MainController {
     }
 */
     // ✅ panel: detail.html 안에 정의한 fragment만 반환
+    /*
     @GetMapping("/listing/{propertyKey}/panel")
     public String detailPanel(@PathVariable("propertyKey") String propertyKey,
                               Model model,
@@ -68,6 +69,6 @@ public class MainController {
         property.put("cctvCount", 21);
         property.put("safeRoadDistance", 320);
         return property;
-    }
+    }*/
     
 }

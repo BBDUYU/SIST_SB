@@ -25,6 +25,7 @@ public class Complex {
     @Column(columnDefinition = "TEXT")
     private String description;
     private LocalDateTime createdAt;
+    
     public void updateFullName() {
         this.fullName = (this.address != null ? this.address : "") + " " + 
                         (this.title != null ? this.title : "");

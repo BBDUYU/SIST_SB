@@ -18,4 +18,11 @@ public interface CctvRepository extends JpaRepository<Cctv, Long> {
         @Param("minLng") Double minLng, 
         @Param("maxLng") Double maxLng
     );
+    
+    @Query(value = "SELECT SUM(c.count) FROM cctv c " +
+            "WHERE (6371 * acos(cos(radians(:lat)) * cos(radians(c.latitude)) " +
+            "* cos(radians(c.longitude) - radians(:lng)) + sin(radians(:lat)) " +
+            "* sin(radians(c.latitude)))) <= 0.3", 
+            nativeQuery = true)
+     Integer countCctvNearby(@Param("lat") Double lat, @Param("lng") Double lng);
 }

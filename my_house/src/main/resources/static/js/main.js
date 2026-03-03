@@ -61,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const lat = parseFloat(btn.getAttribute("data-lat"));
                 const lng = parseFloat(btn.getAttribute("data-lng"));
                 updateInfraStats(lat, lng);
+				
             }
         });
     };
@@ -117,15 +118,43 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // 위치 재중심
-        const recBtn = e.target.closest(".panel-recenter");
-        if (recBtn) {
-            const lat = parseFloat(recBtn.getAttribute("data-lat"));
-            const lng = parseFloat(recBtn.getAttribute("data-lng"));
-            const center = new kakao.maps.LatLng(lat, lng);
-            window.__MAIN_MAP__.setCenter(center);
-            window.__MAIN_MAP__.setLevel(3);
-            window.__MAIN_MARKER__.setPosition(center);
-        }
+		// 위치 재중심 버튼 클릭 시
+		const recBtn = e.target.closest(".panel-recenter");
+		if (recBtn) {
+		    const lat = parseFloat(recBtn.getAttribute("data-lat"));
+		    const lng = parseFloat(recBtn.getAttribute("data-lng"));
+		    
+		    if (isNaN(lat) || isNaN(lng)) {
+		        console.error("좌표 값이 유효하지 않습니다.");
+		        return;
+		    }
+
+		    const center = new kakao.maps.LatLng(lat, lng);
+		    const map = window.__MAIN_MAP__;
+		    const marker = window.__MAIN_MARKER__;
+
+		    if (map) {
+		        map.setLevel(3); 
+		        
+		        setTimeout(() => {
+		            map.panTo(center); 
+		            
+		            if (marker) {
+		                marker.setPosition(center);
+		                marker.setMap(map); // 혹시 꺼져있을 경우를 대비해 다시 표시
+		            }
+
+		            const focusOverlay = new kakao.maps.CustomOverlay({
+		                position: center,
+		                content: '<div class="focus-ring"></div>',
+		                zIndex: 4 // 마커보다 위에 오도록 조정
+		            });
+
+		            focusOverlay.setMap(map);
+		            setTimeout(() => focusOverlay.setMap(null), 2000);
+		        }, 100);
+		    }
+		}
     });
 });
 
@@ -268,3 +297,72 @@ async function updateInfraStats(lat, lng) {
     if(document.getElementById('hospital-count')) document.getElementById('hospital-count').innerText = h;
     if(document.getElementById('mart-count')) document.getElementById('mart-count').innerText = m;
 }
+
+// 인프라
+async function updateInfraStats(lat, lng) {
+    // 카카오 로컬 서비스 객체 생성
+    const ps = new kakao.maps.services.Places();
+    const location = new kakao.maps.LatLng(lat, lng);
+
+    // 공통 검색 함수 (Promise화)
+    const getCount = (categoryCode, radius) => new Promise(resolve => {
+        ps.categorySearch(categoryCode, (data, status, pagination) => {
+            if (status === kakao.maps.services.Status.OK) {
+                // 검색된 전체 개수 반환
+                resolve(pagination.totalCount);
+            } else {
+                resolve(0);
+            }
+        }, { location, radius });
+    });
+
+    try {
+        // 4가지 카테고리 동시 조회
+        // SW8: 지하철역, CS2: 편의점, HP8: 병원, MT1: 대형마트
+        const [subway, cvs, hospital, mart] = await Promise.all([
+            getCount('SW8', 1000), // 지하철 (1km)
+            getCount('CS2', 300),  // 편의점 (300m)
+            getCount('HP8', 1000), // 병원 (1km)
+            getCount('MT1', 1000)  // 마트 (1km)
+        ]);
+
+        // HTML 요소 업데이트 및 상태(Pill) 변경
+        updateInfraUI('subway-count', subway, 1);     // 1개만 있어도 Good
+        updateInfraUI('cvs-count', cvs, 3);        // 3개 이상 Good
+        updateInfraUI('hospital-count', hospital, 2);  // 2개 이상 Good
+        updateInfraUI('mart-count', mart, 1);          // 1개만 있어도 Good
+
+    } catch (e) {
+        console.error("인프라 정보 로드 실패:", e);
+    }
+}
+
+// UI 업데이트 보조 함수
+function updateInfraUI(id, count, threshold) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.innerText = count;
+    
+    // 부모 .pill 태그의 클래스 변경 (상태 표시)
+    const pill = el.closest('.pill');
+    if (pill) {
+        if (count >= threshold) {
+            pill.className = 'pill good';
+            pill.innerText = '좋음';
+        } else if (count > 0) {
+            pill.className = 'pill';
+            pill.innerText = '보통';
+        } else {
+            pill.className = 'pill warn';
+            pill.innerText = '아쉬움';
+        }
+        // 숫자를 다시 넣어줌 (텍스트가 '좋음'으로 덮어씌워지므로)
+        const span = document.createElement('span');
+        span.id = id;
+        span.innerText = count + '개';
+        pill.prepend(span); 
+        // 최종 형태 예: "3개 좋음"
+    }
+}
+

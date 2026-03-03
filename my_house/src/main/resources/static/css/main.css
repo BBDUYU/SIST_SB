@@ -270,3 +270,84 @@ body{
     transition:none !important;
   }
 }
+
+
+/* 점수 */
+/* 툴팁 컨테이너 */
+.info-tooltip-wrap {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  margin-left: 4px;
+  color: #94a3b8; /* 흐린 회색 */
+  vertical-align: middle;
+}
+
+/* 툴팁 말풍선 기본 상태 (숨김) */
+.info-tooltip-content {
+  visibility: hidden;
+  width: 220px;
+  background-color: #334155; /* 진한 남색/회색 */
+  color: #fff;
+  text-align: left;
+  border-radius: 8px;
+  padding: 12px;
+  position: absolute;
+  z-index: 100;
+  bottom: 125%; /* 아이콘 위로 띄움 */
+  left: 0; 
+  transform: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* 말풍선 화살표 */
+.info-tooltip-content::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #334155 transparent transparent transparent;
+}
+
+/* 호버 시 노출 */
+.info-tooltip-wrap:hover .info-tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 내부 리스트 스타일 */
+.info-tooltip-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+.info-tooltip-content li { margin-bottom: 4px; }
+.tooltip-title { font-weight: bold; color: #f1f5f9; border-bottom: 1px solid #475569; padding-bottom: 4px; }
+.tooltip-note { color: #cbd5e1; font-size: 0.7rem; margin-top: 8px; font-style: italic; }
+
+/* 위치이동 핀 표시 */
+@keyframes marker-focus {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.focus-ring {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(30, 58, 138, 0.4); /* 메인 브랜드 색상 계열 */
+  border: 2px solid #1E3A8A;
+  border-radius: 50%;
+  position: absolute;
+  margin-top: -45px; /* 마커 위치에 맞게 조정 (핀 높이만큼) */
+  margin-left: -20px;
+  animation: marker-focus 1s ease-out infinite;
+  pointer-events: none; /* 클릭 방해 금지 */
+  z-index: -1;
+}
