@@ -34,8 +34,8 @@ public class MyHouseApplication {
 	        System.out.println(">>>> 데이터 수집 테스트 완료!");
 	    };
 	}
-	*/
-	/*
+	
+	
 	@Bean
     CommandLineRunner importCctv(org.doit.ik.api.CctvImportService service) {
         return args -> {
@@ -47,7 +47,7 @@ public class MyHouseApplication {
             System.out.println(">>>> CCTV 데이터 임포트 완료!");
         };
     }
-	*/
+	
 	
 	@Bean
     CommandLineRunner collectLh(org.doit.ik.api.LhNoticeService service) {
@@ -61,4 +61,17 @@ public class MyHouseApplication {
         };
     }
     
+	
+	@Bean
+    CommandLineRunner importSafePath(org.doit.ik.api.SafePathImportService service) {
+        return args -> {
+            System.out.println(">>>> [데이터 초기화] 서울특별시 안심귀갓길 경로 데이터 임포트 시작!");
+            
+            // SafePathImportService에서 만든 실행 메서드 호출
+            service.runImport();
+            
+            System.out.println(">>>> [데이터 초기화] 안심귀갓길 데이터 임포트 완료!");
+        };
+    }
+    */
 }

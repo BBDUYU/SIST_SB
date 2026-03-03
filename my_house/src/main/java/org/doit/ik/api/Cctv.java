@@ -1,5 +1,7 @@
 package org.doit.ik.api;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,4 +30,9 @@ public class Cctv {
     private Double latitude;     // WGS84위도
     private Double longitude;    // WGS84경도
     private String dataDate;     // 데이터기준일자
+    
+    @JsonProperty("purposeDesc")
+    public String getPurposeDesc() {
+        return (purpose != null) ? purpose.getDescription() : "기타";
+    }
 }
