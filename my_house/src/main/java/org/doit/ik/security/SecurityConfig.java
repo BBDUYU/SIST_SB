@@ -36,7 +36,7 @@ public class SecurityConfig {
         p.setPasswordEncoder(passwordEncoder);
         return p;
     }
-
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
             DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
@@ -60,7 +60,6 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/images/**"),
                     new AntPathRequestMatcher("/oauth2/**"),
                     new AntPathRequestMatcher("/login/**"),
-                    new AntPathRequestMatcher("/api/**"),                    
                     new AntPathRequestMatcher("/api/**"),                    
                     new AntPathRequestMatcher("/listing/**"),                    
                     new AntPathRequestMatcher("/h2-console/**")
