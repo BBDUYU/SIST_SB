@@ -48,6 +48,7 @@ public class SecurityConfig {
                     // 1. 누구나 접근 가능한 페이지 (Public)
                     new AntPathRequestMatcher("/"),
                     new AntPathRequestMatcher("/main"),
+                    new AntPathRequestMatcher("/mypage/**"),
                     new AntPathRequestMatcher("/error"),
                     new AntPathRequestMatcher("/user/login"),
                     new AntPathRequestMatcher("/user/signup"),
@@ -60,8 +61,7 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/images/**"),
                     new AntPathRequestMatcher("/oauth2/**"),
                     new AntPathRequestMatcher("/login/**"),
-                    new AntPathRequestMatcher("/api/**"),                    
-                    new AntPathRequestMatcher("/api/**"),                    
+                    new AntPathRequestMatcher("/api/**"),                     
                     new AntPathRequestMatcher("/listing/**"),                    
                     new AntPathRequestMatcher("/h2-console/**")
                 ).permitAll()

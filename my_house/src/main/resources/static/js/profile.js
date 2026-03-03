@@ -9,15 +9,9 @@ const currentPasswordEl = document.getElementById('currentPassword');
 const newPasswordEl = document.getElementById('newPassword');
 const confirmPasswordEl = document.getElementById('confirmPassword');
 
-// ✅ 휴대폰 번호 자동 하이픈
+// ✅ 휴대폰 번호: 하이픈 없이 "숫자만" 입력되게
 phoneEl?.addEventListener('input', (e) => {
-  let v = e.target.value.replace(/\D/g, '').slice(0, 11); // 숫자만 11자리
-  if (v.length >= 4 && v.length <= 7) {
-    v = v.slice(0, 3) + '-' + v.slice(3);
-  } else if (v.length >= 8) {
-    v = v.slice(0, 3) + '-' + v.slice(3, 7) + '-' + v.slice(7);
-  }
-  e.target.value = v;
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11); // 숫자만, 최대 11자리
 });
 
 // ✅ 폼 제출 전 유효성 검사
@@ -25,7 +19,7 @@ form?.addEventListener('submit', function (e) {
   e.preventDefault();
 
   const nickname = nicknameEl?.value.trim() ?? '';
-  const phone = phoneEl?.value.trim() ?? '';
+  const phone = phoneEl?.value.trim() ?? ''; // 이미 숫자만 들어있게 됨
 
   const currentPassword = currentPasswordEl?.value ?? '';
   const newPassword = newPasswordEl?.value ?? '';
@@ -38,12 +32,12 @@ form?.addEventListener('submit', function (e) {
     return;
   }
 
-  // (선택) 휴대폰 번호 검증: 입력했을 때만 검사
-  // 010-1234-5678 형태(10~11자리) 허용
+  // ✅ 휴대폰 번호 검증(하이픈 없이)
   if (phone !== '') {
-    const phoneRegex = /^01[0-9]-\d{3,4}-\d{4}$/;
+    const phoneRegex = /^01[0-9]\d{7,8}$/; // 10~11자리: 01012345678
+
     if (!phoneRegex.test(phone)) {
-      alert('휴대폰 번호 형식이 올바르지 않습니다. 예) 010-1234-5678');
+      alert('휴대폰 번호 형식이 올바르지 않습니다. 예) 01012345678');
       phoneEl?.focus();
       return;
     }
@@ -69,7 +63,6 @@ form?.addEventListener('submit', function (e) {
       return;
     }
 
-    // 영문 + 숫자 + 특수문자 조합
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
     if (!passwordRegex.test(newPassword)) {
       alert('새 비밀번호는 영문, 숫자, 특수문자를 조합하여 8자 이상이어야 합니다.');
@@ -84,54 +77,26 @@ form?.addEventListener('submit', function (e) {
     }
   }
 
-  // 검증 통과 시 폼 제출
   this.submit();
 });
 
-// 취소 버튼 클릭 (HTML에서 onclick="handleCancel()"로 호출)
+// 취소 버튼 (필요시)
 function handleCancel() {
   if (confirm('변경사항이 저장되지 않습니다. 취소하시겠습니까?')) {
     window.location.href = '/mypage';
   }
 }
 
-// 실시간 비밀번호 강도 체크(선택)
-newPasswordEl?.addEventListener('input', function (e) {
-  const password = e.target.value;
+// 브라우저 뒤로가기(←)를 /mypage로 강제
+(function forceBackToMypage() {
+  const TARGET = '/mypage';
 
-  if (password.length > 0 && password.length < 8) {
-    this.style.borderColor = '#dc2626';
-    return;
-  }
+  // 1) 히스토리가 없을 수도 있으니 "가짜 한 칸"을 만들어 뒤로가기가 눌리게 함
+  // (직접 URL 입력으로 들어온 경우에도 동작)
+  history.pushState({ guard: true }, '', location.href);
 
-  if (password.length >= 8) {
-    const hasLetter = /[A-Za-z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[@$!%*#?&]/.test(password);
-
-    if (hasLetter && hasNumber && hasSpecial) {
-      this.style.borderColor = '#10b981';
-    } else {
-      this.style.borderColor = '#f59e0b';
-    }
-  } else {
-    this.style.borderColor = '';
-  }
-});
-
-// 비밀번호 확인 실시간 체크
-confirmPasswordEl?.addEventListener('input', function (e) {
-  const newPassword = newPasswordEl?.value ?? '';
-  const confirmPassword = e.target.value;
-
-  if (confirmPassword.length === 0) {
-    this.style.borderColor = '';
-    return;
-  }
-
-  if (newPassword === confirmPassword) {
-    this.style.borderColor = '#10b981';
-  } else {
-    this.style.borderColor = '#dc2626';
-  }
-});
+  // 2) 뒤로 버튼(popstate) 발생 시 /mypage로 이동
+  window.addEventListener('popstate', function () {
+    location.href = TARGET;
+  });
+})();
