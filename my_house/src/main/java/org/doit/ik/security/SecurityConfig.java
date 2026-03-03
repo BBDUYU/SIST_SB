@@ -36,7 +36,7 @@ public class SecurityConfig {
         p.setPasswordEncoder(passwordEncoder);
         return p;
     }
-
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
             DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
