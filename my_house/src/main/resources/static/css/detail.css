@@ -269,3 +269,35 @@
   background:#F6F8FB !important;
   border-bottom:1px solid #E7ECF3;
 }
+
+/* 20260301 필터 */
+.map-filter-group {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+}
+
+.filter-chip {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.filter-chip.active {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.filter-chip i {
+    margin-right: 4px;
+}

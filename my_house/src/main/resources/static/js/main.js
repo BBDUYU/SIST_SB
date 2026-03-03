@@ -170,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+
   // =========================
   // 4) 단지 bounds 동기화 (내 DB complex) + 로드뷰 썸네일
   // =========================
@@ -252,6 +253,64 @@ function initComplexBoundsSync(map) {
       });
 
       complexMarkers.push(marker);
+
+})
+
+// --- [LH 공고 핀 & 안심귀갓길 통합 로직] ---
+
+let cctvMarkers = []; // 기존 마커 관리를 위한 배열
+let cctvInfoWindows = [];
+let noticeMarkers = [];    
+let safePolylines = [];
+
+const filterStatus = {
+    notice: true,
+    safePath: true,
+    cctv: true
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+    // 위에서 생성된 window.__MAIN_MAP__이 잡힐 때까지 잠시 대기하거나 바로 실행
+    const checkMap = setInterval(() => {
+        if (window.__MAIN_MAP__) {
+            clearInterval(checkMap);
+            initAdditionalLayers(window.__MAIN_MAP__);
+        }
+    }, 100);
+});
+
+function initAdditionalLayers(map) {
+    // 1. LH 공고 데이터 가져오기 (마커)
+    fetch('/api/notices')
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(notice => {
+                if (notice.latitude && notice.longitude) {
+                    displayLhMarker(notice, map);
+                }
+            });
+        })
+        .catch(err => console.error("공고 데이터 로딩 실패:", err));
+
+    // 2. 안심귀갓길 데이터 가져오기 (선 - SHP 변환본)
+    fetch('/api/safe-paths') // 안심귀갓길 리스트를 주는 API 주소
+        .then(res => res.json())
+        .then(paths => {
+            paths.forEach(path => {
+                drawSafePolyline(path, map);
+            });
+        })
+        .catch(err => console.error("안심귀갓길 로딩 실패:", err));
+		
+	kakao.maps.event.addListener(map, 'idle', () => {
+	// 줌 레벨이 일정 수준(예: 4이하)으로 낮을 때만 CCTV 표시 (너무 많으면 느려짐)
+		if (filterStatus.cctv && map.getLevel() <= 2) {
+	        updateCctvMarkers(map);
+	    } else {
+	        // 필터가 꺼져있거나 너무 멀면 마커 지우기
+	        cctvMarkers.forEach(m => m.setMap(null));
+	        cctvInfoWindows.forEach(iw => iw.close());
+	    }
     });
   }
 
@@ -324,99 +383,76 @@ function initComplexBoundsSync(map) {
   updateByBounds();
 }
 
-  // =========================
-  // 5) LH 공고/안심귀갓길/CCTV 레이어
-  // =========================
-  function initAdditionalLayers(map) {
-    // 5-1) LH 공고
-    fetch("/api/notices")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!Array.isArray(data)) return;
-        data.forEach((notice) => {
-          if (notice.latitude && notice.longitude) {
-            displayLhMarker(notice, map);
-          }
-        });
-      })
-      .catch((err) => console.error("공고 데이터 로딩 실패:", err));
 
-    // 5-2) 안심귀갓길(Polyline)
-    fetch("/api/safe-paths")
-      .then((res) => res.json())
-      .then((paths) => {
-        if (!Array.isArray(paths)) return;
-        paths.forEach((path) => drawSafePolyline(path, map));
-      })
-      .catch((err) => console.error("안심귀갓길 로딩 실패:", err));
-
-    // 5-3) CCTV(줌에 따라 bounds 요청)
-    kakao.maps.event.addListener(map, "idle", () => {
-      if (map.getLevel() <= 4) updateCctvMarkers(map);
-      else {
-        cctvMarkers.forEach((m) => m.setMap(null));
-      }
-    });
-  }
-
-  // =========================
-  // CCTV 마커
-  // =========================
-  let cctvMarkers = [];
 
   function updateCctvMarkers(map) {
     const bounds = map.getBounds();
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
 
-    fetch(
-      `/api/cctv?minLat=${sw.getLat()}&maxLat=${ne.getLat()}&minLng=${sw.getLng()}&maxLng=${ne.getLng()}`
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error("서버 응답 에러");
-        return res.json();
-      })
-      .then((data) => {
-        cctvMarkers.forEach((m) => m.setMap(null));
-        cctvMarkers = [];
+    fetch(`/api/cctv?minLat=${sw.getLat()}&maxLat=${ne.getLat()}&minLng=${sw.getLng()}&maxLng=${ne.getLng()}`)
+        .then(res => {
+            if (!res.ok) throw new Error('서버 응답 에러');
+            return res.json();
+        })
+        .then(data => {
+            // 1. 기존 마커 제거 및 인포윈도우 닫기
+            cctvMarkers.forEach(m => m.setMap(null));
+            cctvMarkers = [];
+            
+            // 👈 추가: 기존 인포윈도우 모두 닫고 배열 비우기
+            cctvInfoWindows.forEach(iw => iw.close());
+            cctvInfoWindows = [];
 
-        if (!Array.isArray(data)) {
-          console.warn("CCTV 데이터 형식이 배열이 아닙니다:", data);
-          return;
-        }
+            if (!Array.isArray(data)) return;
 
-        data.forEach((cctv) => {
-          const marker = new kakao.maps.Marker({
-            position: new kakao.maps.LatLng(cctv.latitude, cctv.longitude),
-            image: new kakao.maps.MarkerImage(
-              "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-              new kakao.maps.Size(20, 30)
-            ),
-          });
+            data.forEach(cctv => {
+                const marker = new kakao.maps.Marker({
+                    position: new kakao.maps.LatLng(cctv.latitude, cctv.longitude),
+                    image: new kakao.maps.MarkerImage(
+                        'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                        new kakao.maps.Size(20, 30)
+                    )
+                });
 
-          const iwContent = `
-            <div style="padding:10px; min-width:150px; border-radius:8px;">
-              <div style="font-weight:bold; color:#1e293b; margin-bottom:4px;">📷 CCTV 정보</div>
-              <div style="font-size:12px; color:#475569;">용도: <b>${cctv.purposeDesc}</b></div>
-              <div style="font-size:12px; color:#475569;">대수: <b>${cctv.count || 0}대</b></div>
-              <div style="font-size:11px; color:#94a3b8; margin-top:4px;">📍 ${cctv.agency}</div>
-            </div>
-          `;
+				const iwContent = `
 
-          const infowindow = new kakao.maps.InfoWindow({
-            content: iwContent,
-            disableAutoPan: true,
-          });
+							        <div style="padding:10px; min-width:150px; border-radius:8px;">
 
-          kakao.maps.event.addListener(marker, "mouseover", () => infowindow.open(map, marker));
-          kakao.maps.event.addListener(marker, "mouseout", () => infowindow.close());
+							            <div style="font-weight:bold; color:#1e293b; margin-bottom:4px;">📷 CCTV 정보</div>
 
-          marker.setMap(map);
-          cctvMarkers.push(marker);
-        });
-      })
-      .catch((err) => console.error("CCTV 로딩 중 에러 발생:", err));
-  }
+							            <div style="font-size:12px; color:#475569;">용도: <b>${cctv.purposeDesc}</b></div>
+
+							            <div style="font-size:12px; color:#475569;">대수: <b>${cctv.count || 0}대</b></div>
+
+							            <div style="font-size:11px; color:#94a3b8; margin-top:4px;">📍 ${cctv.agency}</div>
+
+							        </div>
+
+							    `;
+                
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: iwContent,
+                    disableAutoPan: true 
+                });
+
+                // 2. 인포윈도우 배열에 보관 👈 추가
+                cctvInfoWindows.push(infowindow);
+
+                kakao.maps.event.addListener(marker, 'mouseover', function() {
+                    infowindow.open(map, marker);
+                });
+
+                kakao.maps.event.addListener(marker, 'mouseout', function() {
+                    infowindow.close();
+                });
+
+                marker.setMap(map);
+                cctvMarkers.push(marker);
+            });
+        })
+        .catch(err => console.error("CCTV 로딩 중 에러:", err));
+}
 
   // =========================
   // LH 마커/오버레이
@@ -430,19 +466,21 @@ function initComplexBoundsSync(map) {
     });
 
     const content = `
-      <div style="background:white; border:1px solid #28a745; padding:2px 6px;
-                  font-size:11px; font-weight:bold; color:#28a745;
-                  border-radius:12px; transform:translateY(-40px); white-space:nowrap;
-                  box-shadow:0 2px 4px rgba(0,0,0,0.1); pointer-events:none;">
-        ${notice.aisTpCdNm}
-      </div>
-    `;
-
-    new kakao.maps.CustomOverlay({
-      position,
-      content,
-      map,
+        <div style="background: white; border: 1px solid #28a745; padding: 2px 6px; 
+                    font-size: 11px; font-weight: bold; color: #28a745;
+                    border-radius: 12px; transform: translateY(-40px); white-space: nowrap;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1); pointer-events: none;">
+            ${notice.aisTpCdNm}
+        </div>`;
+    
+    const overlay = new kakao.maps.CustomOverlay({
+        position: position,
+        content: content,
+        map: map
     });
+
+    // ✅ 필터 제어를 위해 배열에 저장
+    noticeMarkers.push({ marker, overlay });
 
     const iwContent = `
       <div style="padding:15px; width:250px;">
@@ -469,53 +507,58 @@ function initComplexBoundsSync(map) {
   // =========================
   function drawSafePolyline(path, map) {
     try {
-      const rawCoords = JSON.parse(path.pathCoordinates);
-      const linePath = rawCoords.map((p) => new kakao.maps.LatLng(p[1], p[0]));
+        const rawCoords = JSON.parse(path.pathCoordinates); 
+        const linePath = rawCoords.map(p => new kakao.maps.LatLng(p[1], p[0]));
 
-      const polyline = new kakao.maps.Polyline({
-        path: linePath,
-        strokeWeight: 6,
-        strokeColor: "#2ECC71",
-        strokeOpacity: 0.7,
-        strokeStyle: "solid",
-      });
+        const polyline = new kakao.maps.Polyline({
+            path: linePath,
+            strokeWeight: 6,
+            strokeColor: '#2ECC71',
+            strokeOpacity: 0.7,
+            strokeStyle: 'solid'
+        });
 
-      polyline.setMap(map);
+        polyline.setMap(map);
+        
+        // ✅ 필터 제어를 위해 배열에 저장
+        safePolylines.push(polyline);
 
-      const addressParts = [path.sigungu, path.bjdName, path.detailLocation];
-      const fullAddr = addressParts
-        .filter((part) => part && part !== "null" && part.trim() !== "")
-        .join(" ");
+        const addressParts = [path.sigungu, path.bjdName, path.detailLocation];
+        const fullAddr = addressParts.filter(part => part && part !== 'null' && part.trim() !== '').join(' ');
 
-      const tooltipContent = `
-        <div class="safe-tooltip" style="background:rgba(0,0,0,0.85); color:white; padding:10px 15px; border-radius:10px; font-size:12px; pointer-events:none; z-index:1000; min-width:180px;">
-          <div style="font-weight:bold; margin-bottom:6px; color:#2ECC71; border-bottom:1px solid #444; padding-bottom:4px;">
-            🛡️ 안심귀갓길 정보
-          </div>
-          ${fullAddr ? `<div style="margin-bottom:8px; color:#ddd; font-size:11px;">📍 ${fullAddr}</div>` : ""}
-          <div style="display:flex; justify-content:space-between; gap:10px;">
-            <span>🚨 벨: <b>${path.bellCount || 0}</b></span>
-            <span>📷 CCTV: <b>${path.cctvCount || 0}</b></span>
-            <span>💡 보안등: <b>${path.lampCount || 0}</b></span>
-          </div>
-        </div>
-      `;
+        const tooltipContent = `
+            <div class="safe-tooltip" style="background: rgba(0, 0, 0, 0.85); color: white; padding: 10px 15px; border-radius: 10px; font-size: 12px; pointer-events: none; z-index: 1000; min-width: 180px;">
+                <div style="font-weight: bold; margin-bottom: 6px; color: #2ECC71; border-bottom: 1px solid #444; padding-bottom: 4px;">
+                    🛡️ 안심귀갓길 정보
+                </div>
+                ${fullAddr ? `<div style="margin-bottom: 8px; color: #ddd; font-size: 11px;">📍 ${fullAddr}</div>` : ''}
+                <div style="display: flex; justify-content: space-between; gap: 10px;">
+                    <span>🚨 벨: <b>${path.bellCount || 0}</b></span>
+                    <span>📷 CCTV: <b>${path.cctvCount || 0}</b></span>
+                    <span>💡 보안등: <b>${path.lampCount || 0}</b></span>
+                </div>
+            </div>`;
 
-      const tooltip = new kakao.maps.CustomOverlay({
-        content: tooltipContent,
-        xAnchor: 0.5,
-        yAnchor: 1.3,
-      });
+        const tooltip = new kakao.maps.CustomOverlay({
+            content: tooltipContent,
+            xAnchor: 0.5, 
+            yAnchor: 1.3  
+        });
 
-      kakao.maps.event.addListener(polyline, "mouseover", (mouseEvent) => {
-        polyline.setOptions({ strokeOpacity: 1.0, strokeWeight: 8, strokeColor: "#27AE60" });
-        tooltip.setPosition(mouseEvent.latLng);
-        tooltip.setMap(map);
-      });
+        kakao.maps.event.addListener(polyline, 'mouseover', function(mouseEvent) {
+            polyline.setOptions({ strokeOpacity: 1.0, strokeWeight: 8, strokeColor: '#27AE60' });
+            tooltip.setPosition(mouseEvent.latLng);
+            tooltip.setMap(map);
+        });
 
-      kakao.maps.event.addListener(polyline, "mousemove", (mouseEvent) => {
-        tooltip.setPosition(mouseEvent.latLng);
-      });
+        kakao.maps.event.addListener(polyline, 'mousemove', function(mouseEvent) {
+            tooltip.setPosition(mouseEvent.latLng);
+        });
+
+        kakao.maps.event.addListener(polyline, 'mouseout', function() {
+            polyline.setOptions({ strokeOpacity: 0.7, strokeWeight: 6, strokeColor: '#2ECC71' });
+            tooltip.setMap(null);
+        });
 
       kakao.maps.event.addListener(polyline, "mouseout", () => {
         polyline.setOptions({ strokeOpacity: 0.7, strokeWeight: 6, strokeColor: "#2ECC71" });
@@ -524,35 +567,96 @@ function initComplexBoundsSync(map) {
     } catch (e) {
       console.error("안심귀갓길 툴팁 렌더링 에러:", e);
     }
-  }
-  
-  // ---- StaticMap 썸네일(공식) ----
-  const staticObserver = new IntersectionObserver((entries, obs) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
+}
 
-      const el = entry.target; // .static-thumb
-      if (el.dataset.loaded) { obs.unobserve(el); return; }
+async function updateInfraStats(lat, lng) {
+    const ps = new kakao.maps.services.Places();
+    
+    const getCount = (categoryCode, radius) => {
+        return new Promise((resolve) => {
+            ps.categorySearch(categoryCode, (data, status, pagination) => {
+                if (status === kakao.maps.services.Status.OK) {
+                    // pagination.totalCount는 전체 개수를 알려줌
+                    resolve(pagination.totalCount);
+                } else {
+                    resolve(0);
+                }
+            }, {
+                location: new kakao.maps.LatLng(lat, lng),
+                radius: radius
+            });
+        });
+    };
 
-      const lat = parseFloat(el.dataset.lat);
-      const lng = parseFloat(el.dataset.lng);
-      if (Number.isNaN(lat) || Number.isNaN(lng)) { obs.unobserve(el); return; }
+    // 4가지 인프라 병렬 호출
+    const [subway, cvs, hospital, mart] = await Promise.all([
+        getCount('PK6', 1000), // 지하철(1km)
+        getCount('CS2', 300),  // 편의점(300m)
+        getCount('HP8', 1000), // 병원(1km)
+        getCount('MT1', 1000)  // 대형마트(1km)
+    ]);
 
-      const center = new kakao.maps.LatLng(lat, lng);
-      const marker = { position: center };
+    // UI 업데이트 (HTML에 해당 ID들이 있어야 함)
+    if(document.getElementById('subway-count')) document.getElementById('subway-count').innerText = subway;
+    if(document.getElementById('cvs-count')) document.getElementById('cvs-count').innerText = cvs;
+    if(document.getElementById('hospital-count')) document.getElementById('hospital-count').innerText = hospital;
+    if(document.getElementById('mart-count')) document.getElementById('mart-count').innerText = mart;
+}
 
-      new kakao.maps.StaticMap(el, {
-        center,
-        level: 3,
-        marker
-      });
-
-      el.dataset.loaded = "1";
-      obs.unobserve(el);
+// 기존 openDetail 함수 수정
+async function openDetail(propertyKey) {
+    const res = await fetch(`/listing/${propertyKey}/panel`, {
+        headers: { "X-Requested-With": "fetch" },
     });
-  }, { root: null, threshold: 0.1 });
 
-  function lazyLoadStaticThumbs() {
-    document.querySelectorAll(".static-thumb").forEach(el => staticObserver.observe(el));
-  }
+    if (!res.ok) return;
+
+    const html = await res.text();
+    animateSwap(html);
+
+    setTimeout(() => {
+        const recenterBtn = document.querySelector(".panel-recenter");
+        if (recenterBtn) {
+            const lat = parseFloat(recenterBtn.getAttribute("data-lat"));
+            const lng = parseFloat(recenterBtn.getAttribute("data-lng"));
+            updateInfraStats(lat, lng);
+        }
+    }, 300); // 애니메이션 시간 고려
+}
+
+
+// 필터 버튼 클릭 이벤트 제어
+document.addEventListener("click", (e) => {
+    const chip = e.target.closest(".filter-chip");
+    if (!chip) return;
+
+    const filterType = chip.getAttribute("data-filter"); // notice, safePath, cctv
+    const isActive = chip.classList.toggle("active"); // 클래스 토글
+    
+    filterStatus[filterType] = isActive; // 상태 업데이트
+    applyFilter(filterType, isActive);   // 지도에 반영
 });
+
+// 실제 지도 객체들을 숨기거나 보여주는 함수
+function applyFilter(type, show) {
+    const map = window.__MAIN_MAP__;
+    if (!map) return;
+
+    const targetMap = show ? map : null;
+
+    if (type === 'notice') {
+        noticeMarkers.forEach(obj => {
+            obj.marker.setMap(targetMap);
+            obj.overlay.setMap(targetMap);
+        });
+    } else if (type === 'safePath') {
+        safePolylines.forEach(line => line.setMap(targetMap));
+    } else if (type === 'cctv') {
+        if (!show) {
+            cctvMarkers.forEach(m => m.setMap(null));
+            cctvInfoWindows.forEach(iw => iw.close());
+        } else {
+            updateCctvMarkers(map); // 켜면 즉시 호출
+        }
+    }
+}

@@ -34,8 +34,8 @@ public class MyHouseApplication {
 	        System.out.println(">>>> 데이터 수집 테스트 완료!");
 	    };
 	}
-	*/
-	/*
+	
+	
 	@Bean
     CommandLineRunner importCctv(org.doit.ik.api.CctvImportService service) {
         return args -> {
@@ -47,8 +47,8 @@ public class MyHouseApplication {
             System.out.println(">>>> CCTV 데이터 임포트 완료!");
         };
     }
-	*/
-	/*
+	
+	
 	@Bean
     CommandLineRunner collectLh(org.doit.ik.api.LhNoticeService service) {
         return args -> {
@@ -60,8 +60,8 @@ public class MyHouseApplication {
             System.out.println(">>>> LH 공고 데이터 수집 완료! 이제 지도에서 매칭된 핀을 확인할 수 있습니다.");
         };
     }
-    */
-	/*
+    
+	
 	@Bean
     CommandLineRunner importSafePath(org.doit.ik.api.SafePathImportService service) {
         return args -> {
