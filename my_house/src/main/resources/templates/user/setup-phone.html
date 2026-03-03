@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: html(~{::main}, '번호 등록')}">
+
+<main class="page">
+    <link rel="stylesheet" th:href="@{/css/setup-phone.css}">
+    
+    <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}" />
+    <input type="hidden" id="csrfToken" th:value="${_csrf.token}" />
+
+    <section class="setup-container">
+        <h1 class="setup-header">휴대폰 번호를 입력하시면<br>문의 시 더욱 편리하게 연결됩니다.</h1>
+        
+        <input type="tel" id="phoneNumber" class="phone-field" placeholder="휴대폰 번호 입력" maxlength="11">
+        
+        <div class="action-row">
+            <a th:href="@{/}" class="skip-link">나중에 하기</a>
+        </div>
+
+        <button type="button" id="btnSendSms" class="btn-next">다음</button>
+    </section>
+
+    <script th:src="@{/js/setup-phone.js}" defer></script>
+</main>
+</html>

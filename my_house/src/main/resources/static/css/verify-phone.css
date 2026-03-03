@@ -1,0 +1,33 @@
+/* setup-phone.css와 공통 스타일 공유 권장 */
+.verify-msg {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    color: #333;
+}
+
+.code-field {
+    border: none;
+    border-bottom: 2px solid #ddd;
+    width: 100%;
+    padding: 15px 0;
+    font-size: 1.8rem;
+    text-align: center;
+    letter-spacing: 12px; /* 숫자 간격 확보 */
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.code-field:focus {
+    border-bottom-color: #1a3a83;
+}
+
+.resend-link {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}

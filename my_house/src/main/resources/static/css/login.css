@@ -1,0 +1,162 @@
+:root{
+  --primary-500:#1E3A8A;
+  --primary-200:#8D8DB9;
+  --bg:#F9F8FF;
+  --text:#1C2127;
+  --muted:#6B7280;
+  --line:#E5E7EB;
+  --card:#FFFFFF;
+  --input:#F3F4FF;
+  --radius:16px;
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.page{
+  min-height: 100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 56px 16px;
+}
+.card{
+  width: min(720px, 100%);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 48px 56px;
+}
+.title{
+  text-align:center;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 26px;
+  letter-spacing: -0.2px;
+}
+form{
+  width: min(520px, 100%);
+  margin: 0 auto;
+  display:flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.input{
+  width:100%;
+  height: 52px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--input);
+  padding: 0 16px;
+  outline: none;
+  font-size: 14px;
+}
+.input::placeholder{ color: #9CA3AF; }
+.input:focus{
+  border-color: rgba(30,58,138,.35);
+  box-shadow: 0 0 0 4px rgba(30,58,138,.10);
+  background: #fff;
+}
+.primary{
+  margin-top: 6px;
+  width:100%;
+  height: 54px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary-500);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  cursor:pointer;
+}
+.primary:hover{ filter: brightness(0.95); }
+.primary:active{ transform: translateY(1px); }
+.links{
+  margin-top: 14px;
+  display:flex;
+  justify-content:center;
+  gap: 14px;
+  flex-wrap:wrap;
+  font-size: 13px;
+}
+.links a{
+  color: var(--text);
+  text-decoration:none;
+  font-weight: 600;
+}
+.links .sep{
+  color: #D1D5DB;
+  user-select:none;
+}
+.links a:hover{ text-decoration: underline; }
+.sns-title{
+  margin: 22px 0 10px;
+  text-align:center;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.sns-row{
+  display:flex;
+  gap:16px;
+  justify-content:center;
+  margin-top:20px;
+}
+
+/* SNS 버튼 컨테이너: 크기와 여백 제거 핵심 */
+.sns-btn {
+  width: 50px;             /* 크기를 조금 더 작고 컴팩트하게 조정 */
+  height: 50px;
+  border-radius: 12px;     /* 오늘의집/직방 스타일의 부드러운 곡률 */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: transform .15s ease, box-shadow .15s ease;
+  border: 1px solid var(--line); /* 로고와 배경 구분을 위한 연한 테두리 */
+}
+
+/* 이미지 여백 제거 및 크기 최적화 */
+.sns-btn img {
+  width: 100%;             /* 버튼 너비에 꽉 채움 */
+  height: 100%;            /* 버튼 높이에 꽉 채움 */
+  object-fit: cover;       /* 핵심: 이미지의 흰 여백을 무시하고 영역을 꽉 채움 */
+  display: block;
+}
+
+/* 개별 브랜드별 배경색 최적화 (여백 방지용) */
+.sns-btn.kakao { 
+  background: #FEE500; 
+  border-color: #FEE500; 
+}
+.sns-btn.google { 
+  background: #ffffff; 
+}
+.sns-btn.naver { 
+  background: #03C75A; 
+  border-color: #03C75A; 
+}
+
+/* 호버 효과 */
+.sns-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.sns-btn.kakao{ background:#FEE500; border-color:#FEE500; color:#111; }
+.sns-btn.google{ background:#fff; }
+.sns-btn.naver{ background:#03C75A; border-color:#03C75A; color:#fff; }
+.msg{
+  width: min(520px, 100%);
+  margin: 10px auto 0;
+  font-size: 13px;
+  text-align:center;
+}
+.msg.error{ color: #DC2626; }
+.msg.success{ color: #16A34A; }
+@media (max-width: 640px){
+  .card{ padding: 30px 18px; }
+}
