@@ -6,7 +6,10 @@ let cctvInfoWindows = [];
 let noticeMarkers = [];
 let safePolylines = [];
 const filterStatus = { notice: true, safePath: true, cctv: true };
-
+window.closeRvModal = function() {
+    const modal = document.getElementById('rvModal');
+    if (modal) modal.style.display = 'none';
+};
 document.addEventListener("DOMContentLoaded", () => {
     const $ = (sel) => document.querySelector(sel);
 
@@ -61,11 +64,71 @@ document.addEventListener("DOMContentLoaded", () => {
                 const lat = parseFloat(btn.getAttribute("data-lat"));
                 const lng = parseFloat(btn.getAttribute("data-lng"));
                 updateInfraStats(lat, lng);
+				initRoadview('roadview', lat, lng);
 				
             }
         });
     };
 
+	//로드뷰
+	// ✅ 1. 로드뷰 초기화 (상세페이지 내 작은 화면)
+	function initRoadview(containerId, lat, lng) {
+	    const container = document.getElementById(containerId);
+	    if (!container) return;
+
+	    const rv = new kakao.maps.Roadview(container);
+	    const rvClient = new kakao.maps.RoadviewClient();
+	    const position = new kakao.maps.LatLng(lat, lng);
+
+	    rvClient.getNearestPanoId(position, 50, (panoId) => {
+	        if (panoId) rv.setPanoId(panoId, position);
+	        else container.innerHTML = '<div class="text-muted p-5 text-center">로드뷰 없음</div>';
+	    });
+	}
+
+	window.openRvModal = function(lat, lng) {
+	        const modal = document.getElementById('rvModal');
+	        const content = document.getElementById('rvFullContent');
+	        if (!modal || !content) return;
+
+	        modal.style.display = 'block';
+	        content.innerHTML = ''; 
+
+	        const rv = new kakao.maps.Roadview(content);
+	        const rvClient = new kakao.maps.RoadviewClient();
+	        const position = new kakao.maps.LatLng(lat, lng);
+
+	        rvClient.getNearestPanoId(position, 50, (panoId) => {
+	            if (panoId) {
+	                rv.setPanoId(panoId, position);
+	            } else {
+	                content.innerHTML = '<div style="color:white; display:flex; align-items:center; justify-content:center; height:100%;">이 지역은 로드뷰를 지원하지 않습니다.</div>';
+	            }
+	        });
+	    };
+
+	    // ✅ 3. 클릭 이벤트 위임 수정 (중복 리스너 제거 및 정리)
+	    document.addEventListener("click", (e) => {
+	        // 크게보기 버튼
+	        const expandBtn = e.target.closest(".btn-rv-expand");
+	        if (expandBtn) {
+	            const btnRecenter = document.querySelector(".panel-recenter");
+	            if (btnRecenter) {
+	                const lat = btnRecenter.getAttribute("data-lat");
+	                const lng = btnRecenter.getAttribute("data-lng");
+	                window.openRvModal(lat, lng);
+	            }
+	            return;
+	        }
+
+	        // 배경 클릭 시 닫기 기능 추가
+	        if (e.target.id === 'rvModal') {
+	            window.closeRvModal();
+	        }
+	    });
+
+
+	
     function backToList() {
         animateSwap(listHTML, () => {
             if (window.__MAIN_MAP__) {

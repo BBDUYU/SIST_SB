@@ -86,7 +86,14 @@
 
     </div>
   </div>
-
+	<div id="rvModal" class="rv-modal">
+	  <div class="rv-modal-container">
+	    <div id="rvFullContent"></div>
+	    <button type="button" class="rv-close-btn" onclick="window.closeRvModal()" title="닫기">
+	      <i class="bi bi-x-lg"></i>
+	    </button>
+	  </div>
+	</div>
   <script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsKey}&libraries=services|"></script>
   <script th:src="@{/js/main.js}"></script>
 </section>
