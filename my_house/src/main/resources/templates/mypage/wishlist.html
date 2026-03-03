@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: html(~{::section}, 'wishlist')">
+
+<section>
+  <link rel="stylesheet" th:href="@{/css/wishlist.css}">
+
+  <div class="container">
+    <div class="header">
+      <h1 class="title">위시리스트</h1>
+    </div>
+
+    <!-- 요약 카드 -->
+    <div class="card summary-card">
+      <div class="summary-left">
+        <h3 class="card-title">내 관심 매물</h3>
+        <p class="summary-desc">저장한 매물들을 관리할 수 있어요.</p>
+      </div>
+      <div class="summary-right">
+        <div class="summary-badge">
+          <span class="summary-count" th:text="${wishlistCount} ?: 0">0</span>
+          <span class="summary-unit">개</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 리스트 -->
+    <div class="wishlist-list">
+
+      <!-- 비어있으면 -->
+      <div class="empty-state" th:if="${#lists.isEmpty(wishlists)}">
+        <div class="empty-icon">♡</div>
+        <p class="empty-title">아직 위시리스트가 비어 있어요</p>
+        <p class="empty-desc">마음에 드는 매물에 하트를 눌러 저장해보세요.</p>
+        <a th:href="@{/main}" class="btn-primary">매물 보러가기</a>
+      </div>
+
+      <!-- 데이터 있으면 -->
+      <div class="wishlist-card" th:each="w : ${wishlists}">
+        <!-- ✅ 이미지: 없으면 기본 이미지 -->
+        <img class="wishlist-image"
+             th:src="${w.imageUrl} ?: @{/images/sample/property1.jpg}"
+             alt="매물 이미지">
+
+        <div class="wishlist-content">
+          <div class="wishlist-header">
+            <div>
+              <h3 class="wishlist-title" th:text="${w.title}">매물명</h3>
+              <p class="wishlist-location" th:text="${w.location}">위치</p>
+            </div>
+
+            <!-- ✅ 삭제 버튼: wishlistId -->
+            <button type="button" class="btn-icon btn-remove"
+                    th:attr="data-id=${w.wishlistId}">
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+
+          <div class="wishlist-meta">
+            <span class="meta-pill" th:text="${w.type}">관심</span>
+            <span class="meta-price" th:text="${w.price}">-</span>
+          </div>
+
+          <div class="wishlist-footer">
+            <a th:href="${w.detailUrl}" class="btn-outline">상세보기</a>
+            <button type="button" class="btn-primary btn-small"
+                    th:attr="data-id=${w.wishlistId}">
+              비교에 담기
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script th:src="@{/js/wishlist.js}"></script>
+</section>
+</html>

@@ -30,6 +30,8 @@ public class SecurityConfig {
                    new AntPathRequestMatcher("/"),
                    new AntPathRequestMatcher("/main"),
                    new AntPathRequestMatcher("/error"),
+                   
+                   new AntPathRequestMatcher("/mypage/**"),
 
                    // auth pages
                    new AntPathRequestMatcher("/user/login"),
@@ -55,8 +57,6 @@ public class SecurityConfig {
                    // form login processing endpoint
                    new AntPathRequestMatcher("/login"),
 
-                   new AntPathRequestMatcher("/api/**"),
-                   
                    // dev
                    new AntPathRequestMatcher("/h2-console/**")
                ).permitAll()
