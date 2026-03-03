@@ -1,6 +1,13 @@
 // /static/js/main.js
 document.addEventListener("DOMContentLoaded", () => {
-  // ===== 1) 카카오 지도 =====
+  // =========================
+  // 0) 유틸
+  // =========================
+  const $ = (sel) => document.querySelector(sel);
+
+  // =========================
+  // 1) 카카오 지도 생성
+  // =========================
   const mapContainer = document.getElementById("map");
   if (mapContainer && window.kakao?.maps) {
     const map = new kakao.maps.Map(mapContainer, {
@@ -8,27 +15,35 @@ document.addEventListener("DOMContentLoaded", () => {
       level: 5,
     });
 
-    const marker = new kakao.maps.Marker({
+    // "중앙 이동용" 메인 마커(상세 패널의 recenter 버튼에서 사용)
+    const mainMarker = new kakao.maps.Marker({
       position: new kakao.maps.LatLng(37.5665, 126.9780),
     });
-
-    marker.setMap(map);
+    mainMarker.setMap(map);
 
     window.__MAIN_MAP__ = map;
-    window.__MAIN_MARKER__ = marker;
+    window.__MAIN_MARKER__ = mainMarker;
+
+    // 추가 레이어(공고/귀갓길/CCTV) 초기화
+    initAdditionalLayers(map);
+
+    // 단지(내 DB) 리스트 + 마커 초기화
+    initComplexBoundsSync(map);
   }
 
   // 알림 점(옵션)
   document.querySelector(".fab-noti")?.classList.add("has-noti");
 
-  // ===== 2) 좌측 패널 SPA (리스트 <-> 상세) =====
+  // =========================
+  // 2) 좌측 패널 SPA (리스트 <-> 상세)
+  // =========================
   const panel = document.getElementById("panelContent");
   if (!panel) return;
 
   // ✅ 리스트 화면 전체 백업(필터바 포함)
-  const listHTML = panel.innerHTML;
+  let listHTML = panel.innerHTML;
 
-  function animateSwap(nextHTML) {
+  function animateSwap(nextHTML, afterSwap) {
     panel.classList.remove("panel-enter");
     panel.classList.add("panel-anim", "panel-leave");
 
@@ -41,6 +56,8 @@ document.addEventListener("DOMContentLoaded", () => {
       requestAnimationFrame(() => {
         panel.classList.remove("panel-enter");
       });
+
+      if (typeof afterSwap === "function") afterSwap();
     }, 210);
   }
 
@@ -59,10 +76,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function backToList() {
-    animateSwap(listHTML);
+    animateSwap(listHTML, () => {
+      // 리스트 화면으로 돌아온 직후, bounds 기준으로 다시 렌더
+      if (window.__MAIN_MAP__) {
+        // listHTML이 오래된 상태일 수 있어 최신 DOM으로 다시 갱신
+        listHTML = panel.innerHTML;
+        window.__UPDATE_COMPLEX_BY_BOUNDS__?.();
+      }
+    });
   }
 
-  // ===== 3) 전역 클릭 이벤트 위임(핵심) =====
+  // =========================
+  // 3) 전역 클릭 이벤트 위임(핵심)
+  // =========================
   document.addEventListener("click", (e) => {
     // (A) 리스트 하트 토글 (.heart-btn)
     const listHeartBtn = e.target.closest(".heart-btn");
@@ -143,6 +169,91 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
   });
+
+
+  // =========================
+  // 4) 단지 bounds 동기화 (내 DB complex) + 로드뷰 썸네일
+  // =========================
+// ✅ initComplexBoundsSync(map) : 줌 멀어지면 매물(리스트/마커) 숨김 + 가까워지면 다시 로드
+function initComplexBoundsSync(map) {
+  const complexMarkerImage = new kakao.maps.MarkerImage(
+    "/image/pin.png",
+    new kakao.maps.Size(48, 48),
+    { offset: new kakao.maps.Point(24, 48) }
+  );
+  
+  let complexMarkers = [];
+  let debounceTimer = null;
+
+  // 숫자 클수록 멀리 보임 (1~14)
+  const MAX_LEVEL_FOR_COMPLEX = 5; // ✅ 5보다 멀어지면 매물 숨김 (원하면 4/6으로 조절)
+
+  function ensureListContainer() {
+    let el = document.getElementById("complexList");
+    if (el) return el;
+
+    const body = panel.querySelector(".panel-body");
+    if (!body) return null;
+
+    el = document.createElement("div");
+    el.id = "complexList";
+    body.appendChild(el);
+    return el;
+  }
+
+  function clearComplexMarkers() {
+    complexMarkers.forEach((m) => m.setMap(null));
+    complexMarkers = [];
+  }
+
+  function hideComplexUI(msg = "지도를 더 확대하면 매물이 표시돼요") {
+    clearComplexMarkers();
+
+    const el = ensureListContainer();
+    if (el) {
+      el.innerHTML = `<div class="text-muted p-3">${msg}</div>`;
+    }
+  }
+
+  function getBoundsParams() {
+    const bounds = map.getBounds();
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+    return {
+      swLat: sw.getLat(),
+      swLng: sw.getLng(),
+      neLat: ne.getLat(),
+      neLng: ne.getLng(),
+    };
+  }
+
+  async function fetchComplexInBounds() {
+    const p = getBoundsParams();
+    const url = `/api/complex/in-bounds?swLat=${p.swLat}&swLng=${p.swLng}&neLat=${p.neLat}&neLng=${p.neLng}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("in-bounds API 실패: " + res.status);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  }
+
+  function renderComplexMarkers(items) {
+    clearComplexMarkers();
+
+    items.forEach((it) => {
+      if (it.latitude == null || it.longitude == null) return;
+
+      const marker = new kakao.maps.Marker({
+        map,
+        position: new kakao.maps.LatLng(it.latitude, it.longitude),
+		image: complexMarkerImage,
+      });
+
+      kakao.maps.event.addListener(marker, "click", () => {
+        if (it.cid != null) openDetail(String(it.cid));
+      });
+
+      complexMarkers.push(marker);
+
 })
 
 // --- [LH 공고 핀 & 안심귀갓길 통합 로직] ---
@@ -201,11 +312,80 @@ function initAdditionalLayers(map) {
 	        cctvInfoWindows.forEach(iw => iw.close());
 	    }
     });
+  }
+
+  function renderComplexList(items) {
+    const el = ensureListContainer();
+    if (!el) return;
+
+    if (!items || items.length === 0) {
+      el.innerHTML = `<div class="text-muted p-3">현재 지도 범위에 단지가 없어요</div>`;
+      return;
+    }
+
+    // ✅ 썸네일은 일단 기존 껍데기 유지(필요하면 나중에 img/StaticMap 붙이기)
+    el.innerHTML = items
+      .map(
+        (it) => `
+        <div class="card house-card mb-3 house-item"
+             data-key="${it.cid}"
+             data-lat="${it.latitude}"
+             data-lng="${it.longitude}">
+          <div class="card-body d-flex gap-3 align-items-center">
+            <div class="thumb"></div>
+
+            <div class="flex-grow-1">
+              <div class="fw-semibold">${it.title ?? ""}</div>
+              <div class="small text-muted">${it.address ?? ""}</div>
+            </div>
+
+            <a href="#" class="heart-btn" aria-label="찜">
+              <i class="bi bi-heart"></i>
+            </a>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+  }
+
+  async function updateByBounds() {
+    try {
+      // ✅ 멀리 보면 조회 자체 중지 + UI 숨김
+      if (map.getLevel() > MAX_LEVEL_FOR_COMPLEX) {
+        hideComplexUI(`지도를 더 확대하면 매물이 표시돼요 (현재 레벨 ${map.getLevel()})`);
+        return;
+      }
+
+      const data = await fetchComplexInBounds();
+      renderComplexMarkers(data);
+
+      if (document.getElementById("complexList")) {
+        renderComplexList(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function onMapChanged() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(updateByBounds, 200);
+  }
+
+  // ✅ drag/zoom 둘 다 커버 + 호출도 적은 이벤트
+  kakao.maps.event.addListener(map, "idle", onMapChanged);
+
+  // 리스트 복귀 시 외부에서 강제 갱신
+  window.__UPDATE_COMPLEX_BY_BOUNDS__ = updateByBounds;
+
+  // 최초 1회
+  updateByBounds();
 }
 
 
 
-function updateCctvMarkers(map) {
+  function updateCctvMarkers(map) {
     const bounds = map.getBounds();
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
@@ -274,13 +454,15 @@ function updateCctvMarkers(map) {
         .catch(err => console.error("CCTV 로딩 중 에러:", err));
 }
 
-// [함수] LH 마커 및 오버레이 표시
-function displayLhMarker(notice, map) {
+  // =========================
+  // LH 마커/오버레이
+  // =========================
+  function displayLhMarker(notice, map) {
     const position = new kakao.maps.LatLng(notice.latitude, notice.longitude);
 
     const marker = new kakao.maps.Marker({
-        map: map,
-        position: position
+      map,
+      position,
     });
 
     const content = `
@@ -301,28 +483,29 @@ function displayLhMarker(notice, map) {
     noticeMarkers.push({ marker, overlay });
 
     const iwContent = `
-        <div style="padding:15px; width:250px;">
-            <div style="font-size:14px; font-weight:bold; margin-bottom:8px;">${notice.panNm}</div>
-            <div style="font-size:12px; color:#666; margin-bottom:10px;">📅 마감: ${notice.clsgDt}</div>
-            <a href="${notice.dtlUrl}" target="_blank" 
-               style="display:block; background:#28a745; color:#fff; text-decoration:none; 
-                      text-align:center; padding:8px; border-radius:4px; font-size:12px;">
-                공고 상세보기
-            </a>
-        </div>`;
+      <div style="padding:15px; width:250px;">
+        <div style="font-size:14px; font-weight:bold; margin-bottom:8px;">${notice.panNm}</div>
+        <div style="font-size:12px; color:#666; margin-bottom:10px;">📅 마감: ${notice.clsgDt}</div>
+        <a href="${notice.dtlUrl}" target="_blank"
+           style="display:block; background:#28a745; color:#fff; text-decoration:none;
+                  text-align:center; padding:8px; border-radius:4px; font-size:12px;">
+          공고 상세보기
+        </a>
+      </div>
+    `;
 
     const infowindow = new kakao.maps.InfoWindow({
-        content: iwContent,
-        removable: true
+      content: iwContent,
+      removable: true,
     });
 
-    kakao.maps.event.addListener(marker, 'click', function() {
-        infowindow.open(map, marker);
-    });
-}
+    kakao.maps.event.addListener(marker, "click", () => infowindow.open(map, marker));
+  }
 
-
-function drawSafePolyline(path, map) {
+  // =========================
+  // 안심귀갓길 Polyline + Tooltip
+  // =========================
+  function drawSafePolyline(path, map) {
     try {
         const rawCoords = JSON.parse(path.pathCoordinates); 
         const linePath = rawCoords.map(p => new kakao.maps.LatLng(p[1], p[0]));
@@ -377,8 +560,12 @@ function drawSafePolyline(path, map) {
             tooltip.setMap(null);
         });
 
+      kakao.maps.event.addListener(polyline, "mouseout", () => {
+        polyline.setOptions({ strokeOpacity: 0.7, strokeWeight: 6, strokeColor: "#2ECC71" });
+        tooltip.setMap(null);
+      });
     } catch (e) {
-        console.error("안심귀갓길 툴팁 렌더링 에러:", e);
+      console.error("안심귀갓길 툴팁 렌더링 에러:", e);
     }
 }
 
