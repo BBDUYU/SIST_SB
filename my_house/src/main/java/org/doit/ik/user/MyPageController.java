@@ -15,6 +15,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class MyPageController {
     private final WishlistRepository wishlistRepository;
     private final ProfileService profileService;
     private final InquiryService inquiryService;
+    private final org.doit.ik.complex.ComplexRepository complexRepository;
 
     @GetMapping({"", "/"})
     public String mypage(Model model, Principal principal) {
@@ -42,7 +45,6 @@ public class MyPageController {
         model.addAttribute("kakaoJsKey", kakaoJsKey);
         model.addAttribute("alarmCount", 3);
 
-        // 로그인 안 된 상태면(전체허용 테스트 등)
         if (principal == null) {
             model.addAttribute("user", Map.of());
             model.addAttribute("stats", Map.of(
@@ -58,16 +60,12 @@ public class MyPageController {
             return "/mypage/mypage";
         }
 
-        // principal.getName() = email
         String email = principal.getName();
         User loginUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("로그인 사용자 없음: " + email));
 
         Long uid = loginUser.getUid();
 
-        // -----------------------
-        // 1) user
-        // -----------------------
         Map<String, Object> user = new HashMap<>();
         user.put("name", loginUser.getName());
         user.put("grade", loginUser.getRole());
@@ -77,9 +75,6 @@ public class MyPageController {
         user.put("nickname", loginUser.getNickname());
         model.addAttribute("user", user);
 
-        // -----------------------
-        // 2) stats
-        // -----------------------
         long recentCnt = recentlyViewedRepository.countByUser_Uid(uid);
         long reviewCnt = reviewRepository.countByUser_UidAndDeletedAtIsNull(uid);
         long inquiryCnt = inquiryRepository.countByUser_UidAndDeletedFalse(uid);
@@ -92,9 +87,6 @@ public class MyPageController {
         stats.put("wishlistCount", wishlistCnt);
         model.addAttribute("stats", stats);
 
-        // -----------------------
-        // 3) 최근본매물(properties)
-        // -----------------------
         List<RecentlyViewed> recentRows =
                 recentlyViewedRepository.findTop4ByUser_UidOrderByViewedAtDesc(uid);
 
@@ -114,9 +106,6 @@ public class MyPageController {
         }
         model.addAttribute("properties", properties);
 
-        // -----------------------
-        // 4) 리뷰
-        // -----------------------
         Double avg = reviewRepository.avgRating(uid);
         double avgScore = (avg == null) ? 0.0 : Math.round(avg * 10.0) / 10.0;
 
@@ -124,7 +113,6 @@ public class MyPageController {
         reviewStats.put("averageScore", avgScore);
         model.addAttribute("reviewStats", reviewStats);
 
-        // ✅ 변경: complex까지 같이 로딩되도록 repository 쪽에서 처리(아래 참고)
         List<Review> reviewRows =
                 reviewRepository.findByUser_UidAndDeletedAtIsNullOrderByCreatedAtDesc(uid);
 
@@ -132,16 +120,16 @@ public class MyPageController {
         for (Review r : reviewRows) {
             Map<String, Object> row = new HashMap<>();
 
-            // ✅ 변경: cid 대신 complex.full_name 표시
+            // ✅ 추가: cid 내려주기
+            Long cid = (r.getComplex() != null ? r.getComplex().getCid() : null);
+            row.put("cid", cid);
+
             String fullName = null;
             if (r.getComplex() != null) {
-                // Complex 엔티티에 fullName getter가 있어야 함 (컬럼 full_name 매핑)
                 fullName = r.getComplex().getFullName();
             }
 
             if (fullName == null || fullName.isBlank()) {
-                // fallback (혹시 full_name이 없으면 기존 cid라도 보이게)
-                Long cid = (r.getComplex() != null ? r.getComplex().getCid() : null);
                 row.put("propertyName", "단지ID: " + (cid != null ? cid : ""));
             } else {
                 row.put("propertyName", fullName);
@@ -156,9 +144,6 @@ public class MyPageController {
         }
         model.addAttribute("reviews", reviews);
 
-        // -----------------------
-        // 5) 문의
-        // -----------------------
         List<Inquiry> inquiryRows =
                 inquiryRepository.findByUser_UidAndDeletedFalseOrderByCreatedAtDesc(uid);
 
@@ -178,7 +163,6 @@ public class MyPageController {
         return "/mypage/mypage";
     }
 
-    // ===== util =====
     private String formatDate(LocalDateTime dt) {
         if (dt == null) return "";
         return String.format("%d.%02d.%02d", dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth());
@@ -195,7 +179,6 @@ public class MyPageController {
         return days + "일 전";
     }
 
-    // 내 정보 수정
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
         model.addAttribute("isLogin", principal != null);
@@ -239,20 +222,43 @@ public class MyPageController {
         if (principal == null) {
             model.addAttribute("wishlists", List.of());
             model.addAttribute("wishlistCount", 0);
-            return "mypage/wishlist";
+            return "/mypage/wishlist";
         }
 
         String email = principal.getName();
         User user = userRepository.findByEmail(email).orElseThrow();
-
         Long uid = user.getUid();
 
         var wishlistRows = wishlistRepository.findByUser_UidOrderByCreatedAtDesc(uid);
 
         model.addAttribute("wishlistCount", wishlistRepository.countByUser_Uid(uid));
-        model.addAttribute("wishlists", wishlistRows);
 
-        return "mypage/wishlist";
+        List<Map<String, Object>> wishlists = new ArrayList<>();
+
+        for (Wishlist w : wishlistRows) {
+            Map<String, Object> row = new HashMap<>();
+
+            row.put("wishlistId", w.getWishlistId());
+
+            Long cid = (w.getComplex() != null ? w.getComplex().getCid() : null);
+            
+            row.put("cid", cid);
+
+            String title = (w.getComplex() != null ? w.getComplex().getFullName() : null);
+            row.put("title", (title != null && !title.isBlank()) ? title : ("단지ID: " + cid));
+
+            row.put("location", "");
+            row.put("imageUrl", "/images/sample/property1.jpg");
+            row.put("type", "관심");
+            row.put("price", "");
+            row.put("detailUrl", "/main?cid=" + cid);
+
+            wishlists.add(row);
+        }
+
+        model.addAttribute("wishlists", wishlists);
+
+        return "/mypage/wishlist";
     }
 
     @PostMapping("/profile/update")
@@ -290,5 +296,58 @@ public class MyPageController {
             ra.addFlashAttribute("error", "문의 등록 실패: " + e.getMessage());
             return "redirect:/mypage/inquiry";
         }
+    }
+
+    // ✅ 하트 토글(위시리스트)
+    @PostMapping("/wishlist/toggle")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public Map<String, Object> toggleWishlist(
+            @org.springframework.web.bind.annotation.RequestParam("cid") Long cid,
+            Principal principal) {
+
+        if (principal == null) {
+            return Map.of("ok", false, "reason", "UNAUTHORIZED");
+        }
+
+        String email = principal.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("로그인 사용자 없음: " + email));
+
+        Long uid = user.getUid();
+
+        boolean exists = wishlistRepository.existsByUser_UidAndComplex_Cid(uid, cid);
+
+        if (exists) {
+            wishlistRepository.findByUser_UidAndComplex_Cid(uid, cid)
+                    .ifPresent(wishlistRepository::delete);
+            return Map.of("ok", true, "hearted", false);
+        } else {
+            var complex = complexRepository.findById(cid)
+                    .orElseThrow(() -> new IllegalStateException("단지 없음: " + cid));
+            Wishlist w = new Wishlist();
+            w.setUser(user);
+            w.setComplex(complex);
+            wishlistRepository.save(w);
+            return Map.of("ok", true, "hearted", true);
+        }
+    }
+    
+    @GetMapping("/wishlist/ids")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public List<Long> wishlistIds(Principal principal) {
+        if (principal == null) return List.of();
+
+        String email = principal.getName();
+        User user = userRepository.findByEmail(email).orElseThrow();
+        Long uid = user.getUid();
+
+        return wishlistRepository.findCidListByUid(uid);
+    }
+    
+    @PostMapping("/wishlist/remove")
+    @ResponseBody
+    public Map<String, Object> removeWishlist(@RequestParam("id") Long id) {
+        wishlistRepository.deleteById(id);
+        return Map.of("ok", true);
     }
 }
