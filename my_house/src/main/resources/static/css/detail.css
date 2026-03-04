@@ -302,4 +302,132 @@
     margin-right: 4px;
 }
 
+/* ===== Review ===== */
+.reviewSummary{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
 
+.avg{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.avgScore{
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.avgStars{
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  color: #f59e0b;
+}
+
+.avgCount{
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.reviewForm{
+  background: #fff;
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 8px 22px rgba(17,24,39,.06);
+}
+
+.starInput{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-bottom:10px;
+}
+
+.starBtn{
+  border: none;
+  background: transparent;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: .35;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+.starBtn.is-on{ opacity: 1; }
+.starBtn:hover{ transform: translateY(-1px); opacity: 1; }
+
+.ratingText{
+  margin-left: 6px;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.reviewRow{
+  display:flex;
+  gap:10px;
+}
+
+.reviewInput{
+  flex:1;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.12);
+  padding: 10px 12px;
+  outline: none;
+}
+
+.reviewSubmit{
+  border-radius: 12px;
+  border: 1px solid rgba(30,58,138,.25);
+  background: var(--brand);
+  color: #fff;
+  font-weight: 900;
+  padding: 10px 14px;
+}
+
+.reviewList{
+  list-style:none;
+  padding:0;
+  margin:12px 0 0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.reviewItem{
+  background:#fff;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.reviewMeta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.reviewName{
+  font-weight: 900;
+}
+
+.reviewStars{
+  color:#f59e0b;
+  letter-spacing: 2px;
+  font-size: .95rem;
+}
+
+.reviewContent{
+  margin-top: 6px;
+  color: var(--text);
+}
+
+.reviewEmpty{
+  margin-top: 12px;
+  color: var(--muted);
+}

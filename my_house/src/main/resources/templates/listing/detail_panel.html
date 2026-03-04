@@ -176,7 +176,46 @@
             지도에서 매물 위치로 이동
           </button>
         </div>
+			<div class="section">
+			  <h3>리뷰</h3>
+			
+			  <!-- 요약 -->
+			  <div class="reviewSummary">
+			    <div class="avg">
+			      <div class="avgScore" id="avgScore">0.0</div>
+			      <div class="avgStars" id="avgStars" aria-label="평점"></div>
+			      <div class="avgCount"><span id="reviewCount">0</span>개 리뷰</div>
+			    </div>
+			    <div class="hint muted">별점과 한줄 후기를 남겨주세요.</div>
+			  </div>
+			
+			  <!-- 작성 폼 -->
+			  <form class="reviewForm" id="reviewForm"
+			        th:attr="data-pid=${property.cid}">
+			    <div class="starInput" aria-label="별점 선택">
+			      <button type="button" class="starBtn" data-score="1" aria-label="1점">★</button>
+			      <button type="button" class="starBtn" data-score="2" aria-label="2점">★</button>
+			      <button type="button" class="starBtn" data-score="3" aria-label="3점">★</button>
+			      <button type="button" class="starBtn" data-score="4" aria-label="4점">★</button>
+			      <button type="button" class="starBtn" data-score="5" aria-label="5점">★</button>
+			      <input type="hidden" name="rating" id="ratingInput" value="5">
+			      <span class="ratingText" id="ratingText">5점</span>
+			    </div>
+			
+			    <div class="reviewRow">
+			      <input class="reviewInput" id="reviewInput" name="content"
+			             maxlength="200"
+			             placeholder="리뷰를 입력하세요 (최대 200자)" required />
+			      <button class="reviewSubmit" type="submit">등록</button>
+			    </div>
+			  </form>
+			
+			  <!-- 리스트 -->
+			  <ul class="reviewList" id="reviewList"></ul>
+			  <p class="reviewEmpty" id="reviewEmpty">아직 리뷰가 없어요.</p>
+			</div>
 
+<script th:src="@{/js/detail-review.js}"></script>
       </div>
     </div>
   </div>
