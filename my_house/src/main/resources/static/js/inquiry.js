@@ -47,6 +47,20 @@ function handleCancel() {
         // window.history.back();
         
         // 또는 특정 페이지로 이동
-        // window.location.href = '/mypage';
+        window.location.href = '/mypage';
     }
 }
+
+// 브라우저 뒤로가기(←)를 /mypage로 강제
+(function forceBackToMypage() {
+  const TARGET = '/mypage';
+
+  // 1) 히스토리가 없을 수도 있으니 "가짜 한 칸"을 만들어 뒤로가기가 눌리게 함
+  // (직접 URL 입력으로 들어온 경우에도 동작)
+  history.pushState({ guard: true }, '', location.href);
+
+  // 2) 뒤로 버튼(popstate) 발생 시 /mypage로 이동
+  window.addEventListener('popstate', function () {
+    location.href = TARGET;
+  });
+})();
