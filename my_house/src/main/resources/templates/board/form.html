@@ -24,9 +24,9 @@
       <div class="mb-3">
         <label for="category" class="form-label">카테고리</label>
         <select id="category" th:field="*{category}" class="form-select">
-          <option value="notice">공지사항</option>
+          <option value="notice" th:if="${isAdmin}">공지사항</option>
 		  <option value="free">자유게시판</option>
-		  <option value="qna">Q&A</option>
+		  <option value="qna">회원질문</option>
         </select>
       </div>
 

@@ -14,7 +14,6 @@
     <div class="card summary-card">
       <div class="summary-left">
         <h3 class="card-title">내 관심 매물</h3>
-        <p class="summary-desc">저장한 매물들을 관리할 수 있어요.</p>
       </div>
       <div class="summary-right">
         <div class="summary-badge">
@@ -37,43 +36,36 @@
 
       <!-- 데이터 있으면 -->
       <div class="wishlist-card" th:each="w : ${wishlists}">
-        <!-- ✅ 이미지: 없으면 기본 이미지 -->
-        <img class="wishlist-image"
-             th:src="${w.imageUrl} ?: @{/images/sample/property1.jpg}"
-             alt="매물 이미지">
-
-        <div class="wishlist-content">
-          <div class="wishlist-header">
-            <div>
-              <h3 class="wishlist-title" th:text="${w.title}">매물명</h3>
-              <p class="wishlist-location" th:text="${w.location}">위치</p>
-            </div>
-
-            <!-- ✅ 삭제 버튼: wishlistId -->
-            <button type="button" class="btn-icon btn-remove"
-                    th:attr="data-id=${w.wishlistId}">
-              <span aria-hidden="true">✕</span>
-            </button>
-          </div>
-
-          <div class="wishlist-meta">
-            <span class="meta-pill" th:text="${w.type}">관심</span>
-            <span class="meta-price" th:text="${w.price}">-</span>
-          </div>
-
-          <div class="wishlist-footer">
-            <a th:href="${w.detailUrl}" class="btn-outline">상세보기</a>
-            <button type="button" class="btn-primary btn-small"
-                    th:attr="data-id=${w.wishlistId}">
-              비교에 담기
-            </button>
-          </div>
-        </div>
-      </div>
+		  <!-- ✅ 카드 전체 클릭 = 상세 이동 -->
+		  <a class="card-link" th:href="@{/main(cid=${w.cid})}"></a>
+		
+		  <div class="rv-thumb-container"
+			     th:attr="data-lat=${w.lat},data-lng=${w.lng}"
+			     style="width:90px;height:90px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#f1f5f9;display:flex;align-items:center;justify-content:center;">
+			  <i class="bi bi-geo-alt-fill text-muted opacity-50"></i>
+			</div>
+		
+		  <div class="wishlist-content">
+		    <div class="wishlist-header">
+		      <div>
+		        <h3 class="wishlist-title" th:text="${w.title}">매물명</h3>
+		        <p class="wishlist-location" th:text="${w.location}">위치</p>
+		      </div>
+		
+		      <!-- ✅ 삭제 버튼은 링크 위에 올라가야 함 -->
+		      <button type="button" class="btn-icon btn-remove"
+		              th:attr="data-id=${w.wishlistId}">
+		        <span aria-hidden="true">✕</span>
+		      </button>
+		    </div>
+		  </div>
+		</div>
 
     </div>
   </div>
 
   <script th:src="@{/js/wishlist.js}"></script>
+  <script th:src="@{/js/main.js}"></script>
+  <script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsKey}&libraries=services|"></script>
 </section>
 </html>

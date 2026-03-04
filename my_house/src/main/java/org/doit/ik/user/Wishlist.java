@@ -11,18 +11,32 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Getter 
+@Getter
 @Setter
 public class Wishlist {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long wishlistId;
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "uid")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uid")
     private User user;
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "cid")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cid")
     private Complex complex;
+
     private LocalDateTime createdAt;
+
+    // ✅ 하트 저장 시 createdAt null이면 자동 채움
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+    }
 }

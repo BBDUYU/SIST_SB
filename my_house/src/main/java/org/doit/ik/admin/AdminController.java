@@ -23,6 +23,7 @@ public class AdminController {
         return "admin/members";
     }
 
+
     @PostMapping("/admin/members/update-status")
     @ResponseBody
     public String updateStatus(@RequestParam("userId") Long userId, @RequestParam("status") UserStatus status) {
@@ -48,4 +49,6 @@ public class AdminController {
         model.addAttribute("isLogin", principal != null);
         return "admin/reviews";
     }
+
+
 }

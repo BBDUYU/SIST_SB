@@ -3,18 +3,18 @@ package org.doit.ik.user;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.doit.ik.complex.RecentlyViewed;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lombok.RequiredArgsConstructor;
@@ -34,40 +34,36 @@ public class MyPageController {
     private final WishlistRepository wishlistRepository;
     private final ProfileService profileService;
     private final InquiryService inquiryService;
+    private final org.doit.ik.complex.ComplexRepository complexRepository;
+
+    private void setEmptyMyPageModel(Model model) {
+        model.addAttribute("user", Map.of());
+        model.addAttribute("stats", Map.of(
+                "recentView", 0,
+                "reviewCount", 0,
+                "inquiryCount", 0,
+                "wishlistCount", 0
+        ));
+        model.addAttribute("properties", List.of());
+        model.addAttribute("reviewStats", Map.of("averageScore", 0.0));
+        model.addAttribute("reviews", List.of());
+        model.addAttribute("inquiries", List.of());
+    }
 
     @GetMapping({"", "/"})
     public String mypage(Model model, Principal principal) {
-
         model.addAttribute("isLogin", principal != null);
         model.addAttribute("kakaoJsKey", kakaoJsKey);
         model.addAttribute("alarmCount", 3);
 
-        // 로그인 안 된 상태면(전체허용 테스트 등)
-        if (principal == null) {
-            model.addAttribute("user", Map.of());
-            model.addAttribute("stats", Map.of(
-                    "recentView", 0,
-                    "reviewCount", 0,
-                    "inquiryCount", 0,
-                    "wishlistCount", 0
-            ));
-            model.addAttribute("properties", List.of());
-            model.addAttribute("reviewStats", Map.of("averageScore", 0.0));
-            model.addAttribute("reviews", List.of());
-            model.addAttribute("inquiries", List.of());
+        User loginUser = currentUser(principal);
+        if (loginUser == null) {
+            setEmptyMyPageModel(model);
             return "/mypage/mypage";
         }
 
-        // principal.getName() = email
-        String email = principal.getName();
-        User loginUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("로그인 사용자 없음: " + email));
-
         Long uid = loginUser.getUid();
 
-        // -----------------------
-        // 1) user
-        // -----------------------
         Map<String, Object> user = new HashMap<>();
         user.put("name", loginUser.getName());
         user.put("grade", loginUser.getRole());
@@ -77,9 +73,6 @@ public class MyPageController {
         user.put("nickname", loginUser.getNickname());
         model.addAttribute("user", user);
 
-        // -----------------------
-        // 2) stats
-        // -----------------------
         long recentCnt = recentlyViewedRepository.countByUser_Uid(uid);
         long reviewCnt = reviewRepository.countByUser_UidAndDeletedAtIsNull(uid);
         long inquiryCnt = inquiryRepository.countByUser_UidAndDeletedFalse(uid);
@@ -92,9 +85,6 @@ public class MyPageController {
         stats.put("wishlistCount", wishlistCnt);
         model.addAttribute("stats", stats);
 
-        // -----------------------
-        // 3) 최근본매물(properties)
-        // -----------------------
         List<RecentlyViewed> recentRows =
                 recentlyViewedRepository.findTop4ByUser_UidOrderByViewedAtDesc(uid);
 
@@ -114,17 +104,11 @@ public class MyPageController {
         }
         model.addAttribute("properties", properties);
 
-        // -----------------------
-        // 4) 리뷰
-        // -----------------------
         Double avg = reviewRepository.avgRating(uid);
         double avgScore = (avg == null) ? 0.0 : Math.round(avg * 10.0) / 10.0;
 
-        Map<String, Object> reviewStats = new HashMap<>();
-        reviewStats.put("averageScore", avgScore);
-        model.addAttribute("reviewStats", reviewStats);
+        model.addAttribute("reviewStats", Map.of("averageScore", avgScore));
 
-        // ✅ 변경: complex까지 같이 로딩되도록 repository 쪽에서 처리(아래 참고)
         List<Review> reviewRows =
                 reviewRepository.findByUser_UidAndDeletedAtIsNullOrderByCreatedAtDesc(uid);
 
@@ -132,20 +116,14 @@ public class MyPageController {
         for (Review r : reviewRows) {
             Map<String, Object> row = new HashMap<>();
 
-            // ✅ 변경: cid 대신 complex.full_name 표시
-            String fullName = null;
-            if (r.getComplex() != null) {
-                // Complex 엔티티에 fullName getter가 있어야 함 (컬럼 full_name 매핑)
-                fullName = r.getComplex().getFullName();
-            }
+            Long cid = (r.getComplex() != null ? r.getComplex().getCid() : null);
+            row.put("cid", cid);
 
-            if (fullName == null || fullName.isBlank()) {
-                // fallback (혹시 full_name이 없으면 기존 cid라도 보이게)
-                Long cid = (r.getComplex() != null ? r.getComplex().getCid() : null);
-                row.put("propertyName", "단지ID: " + (cid != null ? cid : ""));
-            } else {
-                row.put("propertyName", fullName);
-            }
+            String fullName = (r.getComplex() != null ? r.getComplex().getFullName() : null);
+            row.put("propertyName",
+                    (fullName == null || fullName.isBlank())
+                            ? ("단지ID: " + (cid != null ? cid : ""))
+                            : fullName);
 
             row.put("rating", r.getRating());
             row.put("date", formatDate(r.getCreatedAt()));
@@ -156,9 +134,6 @@ public class MyPageController {
         }
         model.addAttribute("reviews", reviews);
 
-        // -----------------------
-        // 5) 문의
-        // -----------------------
         List<Inquiry> inquiryRows =
                 inquiryRepository.findByUser_UidAndDeletedFalseOrderByCreatedAtDesc(uid);
 
@@ -178,38 +153,17 @@ public class MyPageController {
         return "/mypage/mypage";
     }
 
-    // ===== util =====
-    private String formatDate(LocalDateTime dt) {
-        if (dt == null) return "";
-        return String.format("%d.%02d.%02d", dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth());
-    }
-
-    private String toAgo(LocalDateTime dt) {
-        if (dt == null) return "";
-        Duration d = Duration.between(dt, LocalDateTime.now());
-        long minutes = d.toMinutes();
-        if (minutes < 60) return minutes + "분 전";
-        long hours = d.toHours();
-        if (hours < 24) return hours + "시간 전";
-        long days = d.toDays();
-        return days + "일 전";
-    }
-
-    // 내 정보 수정
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
         model.addAttribute("isLogin", principal != null);
         model.addAttribute("kakaoJsKey", kakaoJsKey);
         model.addAttribute("alarmCount", 3);
 
-        if (principal == null) {
+        User loginUser = currentUser(principal);
+        if (loginUser == null) {
             model.addAttribute("user", Map.of());
             return "/mypage/profile";
         }
-
-        String email = principal.getName();
-        User loginUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("로그인 사용자 없음: " + email));
 
         Map<String, Object> user = new HashMap<>();
         user.put("nickname", loginUser.getNickname());
@@ -231,38 +185,57 @@ public class MyPageController {
 
     @GetMapping("/wishlist")
     public String wishlist(Model model, Principal principal) {
-
         model.addAttribute("isLogin", principal != null);
         model.addAttribute("kakaoJsKey", kakaoJsKey);
         model.addAttribute("alarmCount", 3);
 
-        if (principal == null) {
+        User user = currentUser(principal);
+        if (user == null) {
             model.addAttribute("wishlists", List.of());
             model.addAttribute("wishlistCount", 0);
-            return "mypage/wishlist";
+            return "/mypage/wishlist";
         }
 
-        String email = principal.getName();
-        User user = userRepository.findByEmail(email).orElseThrow();
-
         Long uid = user.getUid();
-
         var wishlistRows = wishlistRepository.findByUser_UidOrderByCreatedAtDesc(uid);
 
         model.addAttribute("wishlistCount", wishlistRepository.countByUser_Uid(uid));
-        model.addAttribute("wishlists", wishlistRows);
 
-        return "mypage/wishlist";
+        List<Map<String, Object>> wishlists = new ArrayList<>();
+        for (Wishlist w : wishlistRows) {
+            Map<String, Object> row = new HashMap<>();
+
+            row.put("wishlistId", w.getWishlistId());
+
+            Long cid = (w.getComplex() != null ? w.getComplex().getCid() : null);
+            row.put("cid", cid);
+            
+            row.put("lat", w.getComplex() != null ? w.getComplex().getLatitude() : null);
+            row.put("lng", w.getComplex() != null ? w.getComplex().getLongitude() : null);
+
+            String title = (w.getComplex() != null ? w.getComplex().getFullName() : null);
+            row.put("title", (title != null && !title.isBlank()) ? title : ("단지ID: " + cid));
+
+            row.put("location", "");
+            row.put("imageUrl", "/images/sample/property1.jpg");
+            row.put("type", "관심");
+            row.put("price", "");
+            row.put("detailUrl", "/main?cid=" + cid);
+
+            wishlists.add(row);
+        }
+
+        model.addAttribute("wishlists", wishlists);
+        return "/mypage/wishlist";
     }
 
     @PostMapping("/profile/update")
-    public String updateProfile(ProfileUpdateRequest req,
-                                Principal principal,
-                                RedirectAttributes ra) {
-        if (principal == null) return "redirect:/user/login";
+    public String updateProfile(ProfileUpdateRequest req, Principal principal, RedirectAttributes ra) {
+        User user = currentUser(principal);
+        if (user == null) return "redirect:/user/login";
 
         try {
-            profileService.updateProfile(principal.getName(), req);
+            profileService.updateProfile(user.getEmail(), req);
             ra.addFlashAttribute("msg", "저장되었습니다.");
             return "redirect:/mypage";
         } catch (IllegalArgumentException e) {
@@ -272,13 +245,12 @@ public class MyPageController {
     }
 
     @PostMapping("/inquiry/create")
-    public String createInquiry(InquiryCreateRequest req,
-                                Principal principal,
-                                RedirectAttributes ra) {
-        if (principal == null) return "redirect:/user/login";
+    public String createInquiry(InquiryCreateRequest req, Principal principal, RedirectAttributes ra) {
+        User user = currentUser(principal);
+        if (user == null) return "redirect:/user/login";
 
         try {
-            Long id = inquiryService.createInquiry(principal.getName(), req);
+            Long id = inquiryService.createInquiry(user.getEmail(), req);
             ra.addFlashAttribute("msg", "문의가 등록되었습니다. (ID=" + id + ")");
             return "redirect:/mypage";
 
@@ -290,5 +262,105 @@ public class MyPageController {
             ra.addFlashAttribute("error", "문의 등록 실패: " + e.getMessage());
             return "redirect:/mypage/inquiry";
         }
+    }
+
+    @PostMapping("/wishlist/toggle")
+    @ResponseBody
+    public Map<String, Object> toggleWishlist(@RequestParam("cid") Long cid, Principal principal) {
+        User user = currentUser(principal);
+        if (user == null) return Map.of("ok", false, "reason", "UNAUTHORIZED");
+
+        Long uid = user.getUid();
+        boolean exists = wishlistRepository.existsByUser_UidAndComplex_Cid(uid, cid);
+
+        if (exists) {
+            wishlistRepository.findByUser_UidAndComplex_Cid(uid, cid)
+                    .ifPresent(wishlistRepository::delete);
+            return Map.of("ok", true, "hearted", false);
+        } else {
+            var complex = complexRepository.findById(cid)
+                    .orElseThrow(() -> new IllegalStateException("단지 없음: " + cid));
+            Wishlist w = new Wishlist();
+            w.setUser(user);
+            w.setComplex(complex);
+            wishlistRepository.save(w);
+            return Map.of("ok", true, "hearted", true);
+        }
+    }
+
+    @GetMapping("/wishlist/ids")
+    @ResponseBody
+    public List<Long> wishlistIds(Principal principal) {
+        User user = currentUser(principal);
+        if (user == null) return List.of();
+        return wishlistRepository.findCidListByUid(user.getUid());
+    }
+
+    @PostMapping("/wishlist/remove")
+    @ResponseBody
+    public Map<String, Object> removeWishlist(@RequestParam("id") Long id) {
+        wishlistRepository.deleteById(id);
+        return Map.of("ok", true);
+    }
+
+    private User currentUser(Principal principal) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+
+        Object p = auth.getPrincipal();
+
+        // 1) 일반 로그인 → email
+        if (p instanceof UserDetails ud) {
+            String email = ud.getUsername();
+            return userRepository.findByEmail(email).orElse(null);
+        }
+
+        // 2) OAuth2 로그인(카카오 등)
+        if (p instanceof OAuth2User ou) {
+            // (A) email 우선
+            Object emailObj = ou.getAttribute("email");
+            if (emailObj instanceof String email && !email.isBlank()) {
+                return userRepository.findByEmail(email).orElse(null);
+            }
+
+            Object ka = ou.getAttribute("kakao_account");
+            if (ka instanceof Map<?, ?> kakaoAccount) {
+                Object kEmail = kakaoAccount.get("email");
+                if (kEmail instanceof String email && !email.isBlank()) {
+                    return userRepository.findByEmail(email).orElse(null);
+                }
+            }
+
+            if (auth instanceof OAuth2AuthenticationToken oat) {
+                Provider provider = Provider.valueOf(oat.getAuthorizedClientRegistrationId().toUpperCase()); // KAKAO
+                Object idObj = ou.getAttribute("id"); // kakao
+                if (idObj != null) {
+                    String providerId = String.valueOf(idObj);
+                    return userRepository.findByProviderAndProviderId(provider, providerId).orElse(null);
+                }
+            }
+
+            return userRepository.findByEmail(auth.getName()).orElse(null);
+        }
+
+        return null;
+    }
+
+    private String formatDate(LocalDateTime dt) {
+        if (dt == null) return "";
+        return String.format("%d.%02d.%02d", dt.getYear(), dt.getMonthValue(), dt.getDayOfMonth());
+    }
+
+    private String toAgo(LocalDateTime dt) {
+        if (dt == null) return "";
+        Duration d = Duration.between(dt, LocalDateTime.now());
+        long minutes = d.toMinutes();
+        if (minutes < 60) return minutes + "분 전";
+        long hours = d.toHours();
+        if (hours < 24) return hours + "시간 전";
+        long days = d.toDays();
+        return days + "일 전";
     }
 }

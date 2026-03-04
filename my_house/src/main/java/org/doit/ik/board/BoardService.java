@@ -58,8 +58,13 @@ public class BoardService {
 		return boardRepository.save(b).getBoardId();
 	}
 
-	public void update(Long id, BoardDTO dto) {
-		Board b = get(id);
+	public void update(Long id, BoardDTO dto, User me) {
+	    Board b = get(id);
+
+	    if (me == null || b.getUser() == null || !b.getUser().getUid().equals(me.getUid())) {
+	        throw new IllegalStateException("작성자만 수정 가능");
+	    }
+	    
 		b.setTitle(dto.getTitle());
 		b.setContent(dto.getContent());
 
@@ -73,7 +78,7 @@ public class BoardService {
 	private String toCategoryName(String code) {
 		return switch (code) {
 		case "notice" -> "공지사항";
-		case "qna" -> "Q&A";
+		case "qna" -> "회원질문";
 		default -> "자유게시판";
 		};
 	}
@@ -95,6 +100,35 @@ public class BoardService {
 	    r.setContent(content.trim());
 
 	    replyRepository.save(r);
+	}
+	
+	public void deleteReply(Long boardId, Long replyId, User me) {
+	    if (me == null) throw new IllegalStateException("로그인 필요");
+
+	    Reply r = replyRepository.findById(replyId)
+	        .orElseThrow(() -> new IllegalArgumentException("댓글 없음"));
+
+	    if (r.getBoard() == null || !r.getBoard().getBoardId().equals(boardId)) {
+	        throw new IllegalStateException("잘못된 요청");
+	    }
+
+	    // 본인만 삭제
+	    if (r.getUser() == null || !r.getUser().getUid().equals(me.getUid())) {
+	        throw new IllegalStateException("본인만 삭제 가능");
+	    }
+
+	    replyRepository.delete(r);
+	}
+	
+	public void delete(Long id, User me) {
+	    Board b = get(id);
+
+	    if (me == null || b.getUser() == null || !b.getUser().getUid().equals(me.getUid())) {
+	        throw new IllegalStateException("작성자만 삭제 가능");
+	    }
+
+	    b.setStatus(BoardStatus.INACTIVE); // 소프트 삭제
+	    boardRepository.save(b);
 	}
 
 }

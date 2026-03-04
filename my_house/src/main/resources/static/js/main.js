@@ -10,6 +10,13 @@ window.closeRvModal = function() {
     const modal = document.getElementById('rvModal');
     if (modal) modal.style.display = 'none';
 };
+
+function getCsrf() {
+  const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+  const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+  return { token, header };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const $ = (sel) => document.querySelector(sel);
 
@@ -55,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (!res.ok) return;
         const html = await res.text();
-        animateSwap(html, () => {
+        animateSwap(html, async () => {
             const btn = document.querySelector(".panel-recenter");
             if (btn) {
                 const lat = parseFloat(btn.getAttribute("data-lat"));
@@ -64,13 +71,29 @@ document.addEventListener("DOMContentLoaded", () => {
 				initRoadview('roadview', lat, lng);
 				
             }
-			const reviewForm = document.getElementById('reviewForm');
-	        if (reviewForm && typeof window.initReviewModule === 'function') {
-	            const cid = reviewForm.getAttribute('data-pid');
-	            console.log("상세패널 로드 완료 -> 리뷰 모듈 초기화 시도 (CID:", cid, ")");
-	            window.initReviewModule(cid);
-	        }
+			
+
+			// 상세 하트 상태 유지
+			const hb = document.getElementById("btnHeart");
+			if (hb) {
+			    const cid = Number(hb.dataset.cid);
+			    const r = await fetch("/mypage/wishlist/ids", { credentials: "same-origin" });
+			    const ids = new Set((await r.json()).map(Number));
+
+			    const isOn = ids.has(cid);
+			    hb.classList.toggle("hearted", isOn);
+
+			    const path = hb.querySelector("svg path");
+			    if (path) {
+			        path.setAttribute("fill", isOn ? "#DC2626" : "none");
+			        path.setAttribute("stroke", isOn ? "#DC2626" : "#0F172A");
+			    }
+			}
+			if (window.initReviewModule) {
+			            window.initReviewModule(propertyKey);
+			        }
         });
+
     };
 
 	//로드뷰
@@ -130,8 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	        }
 	    });
 
-
-	
     function backToList() {
         animateSwap(listHTML, () => {
             if (window.__MAIN_MAP__) {
@@ -142,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 3) 클릭 이벤트 위임
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", async (e) => {
         // 하트 토글
         const heartBtn = e.target.closest(".heart-btn, #btnHeart.iconBtn");
         if (heartBtn) {
@@ -159,8 +180,72 @@ document.addEventListener("DOMContentLoaded", () => {
                 icon.classList.toggle("bi-heart-fill");
                 icon.style.color = icon.classList.contains("bi-heart-fill") ? "#e11d48" : "";
             }
+			// DB 저장 토글
+			// ✅ 여기부터 수정 (DB 저장 토글)
+			try {
+				const item = heartBtn.closest(".house-item");
+				const cid =
+				  Number(heartBtn.dataset.cid) ||   // 상세페이지 하트
+				  (item ? Number(item.getAttribute("data-key")) : null); // 목록 하트
+			  if (!cid) throw new Error("cid 없음");
+
+			  const { token, header } = getCsrf();
+
+			  const res = await fetch(`/mypage/wishlist/toggle?cid=${cid}`, {
+			    method: "POST",
+			    headers: {
+			      ...(token && header ? { [header]: token } : {}),
+			      "X-Requested-With": "XMLHttpRequest",
+			    },
+			    credentials: "same-origin"
+			  });
+
+			  const json = await res.json();
+
+			  if (json.ok) {
+			    console.log("wishlist 상태:", json.hearted ? "추가됨" : "삭제됨");
+			  } else {
+			    alert("로그인이 필요합니다.");
+			  }
+
+			} catch (err) {
+			  console.error("wishlist toggle error:", err);
+			}
+			
             return;
         }
+		
+		// 위시리스트 삭제 버튼 (.btn-icon.btn-remove)
+		const removeBtn = e.target.closest(".btn-icon.btn-remove");
+		if (removeBtn) {
+		  e.preventDefault();
+
+		  const wid = removeBtn.dataset.id; // 버튼에 data-id 필요
+		  if (!wid) {
+		    console.error("wishlist id 없음 (data-id 확인)");
+		    return;
+		  }
+
+		  const { token, header } = getCsrf();
+
+		  const res = await fetch(`/mypage/wishlist/remove?id=${wid}`, {
+		    method: "POST",
+		    headers: {
+		      ...(token && header ? { [header]: token } : {}),
+		      "X-Requested-With": "XMLHttpRequest",
+		    },
+		    credentials: "same-origin",
+		  });
+
+		  if (!res.ok) {
+		    console.error("wishlist remove failed:", res.status);
+		    return;
+		  }
+
+		  // 화면에서 카드 제거 (위시리스트 페이지 카드 wrapper 클래스에 맞춰 조정)
+		  removeBtn.closest(".wishlist-card")?.remove();
+		  return;
+		}
 
         // 카드 클릭
         const item = e.target.closest(".house-item");
@@ -222,11 +307,69 @@ document.addEventListener("DOMContentLoaded", () => {
 		    }
 		}
     });
+	
+	document.addEventListener("change", (e) => {
+	  const id = e.target?.id;
+	  if (id === "filterType" || id === "filterArea" || id === "filterPrice") {
+	    window.__UPDATE_COMPLEX_BY_BOUNDS__?.();
+	  }
+	});
 });
 
 // --- 기능 함수들 (독립 선언) ---
+function pyeongRangeToM2(rangeCode) {
+  if (!rangeCode) return { areaMin: "", areaMax: "" };
+
+  const P = 3.3058;
+  if (rangeCode === "30-") return { areaMin: (30 * P).toFixed(2), areaMax: "" };
+
+  const [minP, maxP] = rangeCode.split("-").map(Number);
+  const areaMin = (minP * P).toFixed(2);
+  const areaMax = (maxP * P).toFixed(2);
+
+  return { areaMin, areaMax };
+}
+
 
 function initComplexBoundsSync(map) {
+	
+	initMainFilterOptions();
+	
+	function initMainFilterOptions() {
+	  const typeSel = document.getElementById("filterType");
+	  const areaSel = document.getElementById("filterArea");
+	  const rentSel = document.getElementById("filterPrice");
+
+	  if (!typeSel || !areaSel || !rentSel) return;
+
+	  // 주거형태
+	  typeSel.innerHTML = `
+	    <option value="">주거형태</option>
+	    <option value="APT">아파트</option>
+	    <option value="SH">주택</option>
+	    <option value="OFFI">오피스텔</option>
+	  `;
+
+	  // 평수(옵션 value는 “구간 코드”로)
+	  areaSel.innerHTML = `
+	    <option value="">평수</option>
+	    <option value="0-5">~5평</option>
+	    <option value="5-10">~10평</option>
+	    <option value="10-15">~15평</option>
+	    <option value="15-20">~20평</option>
+	    <option value="20-25">~25평</option>
+	    <option value="25-30">~30평</option>
+	    <option value="30-">30평 이상</option>
+	  `;
+
+	  // 전/월세
+	  rentSel.innerHTML = `
+	    <option value="">전/월세</option>
+	    <option value="전세">전세</option>
+	    <option value="월세">월세</option>
+	  `;
+	}
+	
     const complexMarkerImage = new kakao.maps.MarkerImage("/image/pin.png", new kakao.maps.Size(48, 48), { offset: new kakao.maps.Point(24, 48) });
     let complexMarkers = [];
     let debounceTimer = null;
@@ -239,9 +382,28 @@ function initComplexBoundsSync(map) {
             return;
         }
         const b = map.getBounds();
-        const url = `/api/complex/in-bounds?swLat=${b.getSouthWest().getLat()}&swLng=${b.getSouthWest().getLng()}&neLat=${b.getNorthEast().getLat()}&neLng=${b.getNorthEast().getLng()}`;
+        // const url = `/api/complex/in-bounds?swLat=${b.getSouthWest().getLat()}&swLng=${b.getSouthWest().getLng()}&neLat=${b.getNorthEast().getLat()}&neLng=${b.getNorthEast().getLng()}`;
+		// 필터 값 읽기
+		const type = document.getElementById("filterType")?.value || "";
+		const rentType = document.getElementById("filterPrice")?.value || "";
+		const areaCode = document.getElementById("filterArea")?.value || "";
+		const { areaMin, areaMax } = pyeongRangeToM2(areaCode);
+
+		// 필터 포함 URL
+		const url =
+		  `/api/complex/in-bounds?swLat=${b.getSouthWest().getLat()}&swLng=${b.getSouthWest().getLng()}` +
+		  `&neLat=${b.getNorthEast().getLat()}&neLng=${b.getNorthEast().getLng()}` +
+		  `&type=${encodeURIComponent(type)}` +
+		  `&rentType=${encodeURIComponent(rentType)}` +
+		  `&areaMin=${encodeURIComponent(areaMin)}` +
+		  `&areaMax=${encodeURIComponent(areaMax)}`;
+	    
+		
         const res = await fetch(url);
         const data = await res.json();
+		
+		const res2 = await fetch("/mypage/wishlist/ids", { credentials: "same-origin" });
+		const wishedIds = new Set((await res2.json()).map(Number));
 
         // 마커 초기화 및 생성
         complexMarkers.forEach(m => m.setMap(null));
@@ -258,26 +420,31 @@ function initComplexBoundsSync(map) {
             const newEl = document.createElement("div"); newEl.id = "complexList";
             body.appendChild(newEl); return newEl;
         })();
-		listEl.innerHTML = data.map(it => `
-		    <div class="card house-card mb-3 house-item" data-key="${it.cid}">
-		        <div class="card-body d-flex gap-3 align-items-center p-2">
-		            <div class="rv-thumb-container" 
+		if (listEl) {
+		    listEl.innerHTML = data.map(it => {
+		        const isWished = wishedIds.has(Number(it.cid));
+		        return `
+		        <div class="card house-card mb-3 house-item" data-key="${it.cid}">
+		            <div class="card-body d-flex gap-3 align-items-center">
+		                <div class="rv-thumb-container" 
 		                 data-lat="${it.latitude}" 
 		                 data-lng="${it.longitude}"
 		                 style="width:90px; height:90px; flex-shrink:0; border-radius:12px; overflow:hidden; background:#f1f5f9; display:flex; align-items:center; justify-content:center;">
 		                <i class="bi bi-geo-alt-fill text-muted opacity-50"></i>
 		            </div>
-		            <div class="flex-grow-1">
-		                <div class="fw-bold" style="font-size:14px;">${it.title}</div>
-		                <div class="small text-muted">${it.address}</div>
+		                <div class="flex-grow-1">
+		                    <div class="fw-semibold">${it.title || ""}</div>
+		                    <div class="small text-muted">${it.address || ""}</div>
+		                </div>
+		                <a href="#" class="heart-btn">
+		                    <i class="bi ${isWished ? "bi-heart-fill" : "bi-heart"}"
+		                       style="${isWished ? "color:#e11d48" : ""}"></i>
+		                </a>
 		            </div>
-				<a href="#" class="heart-btn"><i class="bi bi-heart"></i></a>
-		        </div>
-		    </div>
-		`).join("");
-
-		// 2. 리스트 생성 직후 이 함수를 호출하세요!
-		lazyLoadRoadview();
+		        </div>`;
+		    }).join("");
+			lazyLoadRoadview();
+		}
     };
 
     kakao.maps.event.addListener(map, "idle", () => {
@@ -285,6 +452,14 @@ function initComplexBoundsSync(map) {
         debounceTimer = setTimeout(update, 200);
     });
     window.__UPDATE_COMPLEX_BY_BOUNDS__ = update;
+	
+	// ["filterType","filterArea","filterPrice"].forEach(id => {
+	//  const el = document.getElementById(id);
+	//  if (!el) return;
+	//  el.addEventListener("change", () => window.__UPDATE_COMPLEX_BY_BOUNDS__?.());
+	// });
+	
+	
     update();
 }
 
@@ -339,6 +514,28 @@ document.addEventListener("DOMContentLoaded", function () {
             initAdditionalLayers(window.__MAIN_MAP__);
         }
     }, 100);
+	
+	// ✅ /main?cid=123 으로 들어오면 상세 패널 자동 오픈 (+ focus=review면 리뷰 위치로)
+	const params = new URLSearchParams(window.location.search);
+	const cid = params.get("cid");
+	const focus = params.get("focus");
+
+	if (cid && window.openDetail) {
+	  window.openDetail(cid);
+
+	  if (focus === "review") {
+	    // 패널이 들어오고 리뷰 모듈이 붙을 시간 조금 대기
+	    setTimeout(() => {
+	      const reviewEl =
+	        document.getElementById("reviewForm") ||
+	        document.querySelector(".reviewForm") ||
+	        document.querySelector("#reviewList") ||
+	        document.querySelector(".reviewList");
+
+	      reviewEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+	    }, 600);
+	  }
+	}
 });
 
 function initAdditionalLayers(map) {
@@ -496,7 +693,7 @@ function drawSafePolyline(path, map) {
 function updateCctvMarkers(map) {
     const b = map.getBounds();
     const url = `/api/cctv?minLat=${b.getSouthWest().getLat()}&maxLat=${b.getNorthEast().getLat()}&minLng=${b.getSouthWest().getLng()}&maxLng=${b.getNorthEast().getLng()}`;
-    
+	
     fetch(url)
         .then(res => res.json())
         .then(data => {
@@ -585,17 +782,17 @@ function applyFilter(type, show) {
 	}
 }
 
-async function updateInfraStats(lat, lng) {
-    const ps = new kakao.maps.services.Places();
-    const getCount = (code, radius) => new Promise(res => {
-        ps.categorySearch(code, (data, status, pagination) => res(status === kakao.maps.services.Status.OK ? pagination.totalCount : 0), { location: new kakao.maps.LatLng(lat, lng), radius });
-    });
-    const [s, c, h, m] = await Promise.all([getCount('PK6', 1000), getCount('CS2', 300), getCount('HP8', 1000), getCount('MT1', 1000)]);
-    if(document.getElementById('subway-count')) document.getElementById('subway-count').innerText = s;
-    if(document.getElementById('cvs-count')) document.getElementById('cvs-count').innerText = c;
-    if(document.getElementById('hospital-count')) document.getElementById('hospital-count').innerText = h;
-    if(document.getElementById('mart-count')) document.getElementById('mart-count').innerText = m;
-}
+// async function updateInfraStats(lat, lng) {
+//     const ps = new kakao.maps.services.Places();
+//     const getCount = (code, radius) => new Promise(res => {
+//         ps.categorySearch(code, (data, status, pagination) => res(status === kakao.maps.services.Status.OK ? pagination.totalCount : 0), { location: new kakao.maps.LatLng(lat, lng), radius });
+//     });
+//     const [s, c, h, m] = await Promise.all([getCount('PK6', 1000), getCount('CS2', 300), getCount('HP8', 1000), getCount('MT1', 1000)]);
+//     if(document.getElementById('subway-count')) document.getElementById('subway-count').innerText = s;
+//     if(document.getElementById('cvs-count')) document.getElementById('cvs-count').innerText = c;
+//     if(document.getElementById('hospital-count')) document.getElementById('hospital-count').innerText = h;
+//     if(document.getElementById('mart-count')) document.getElementById('mart-count').innerText = m;
+// }
 
 // 인프라
 async function updateInfraStats(lat, lng) {
@@ -665,3 +862,19 @@ function updateInfraUI(id, count, threshold) {
     }
 }
 
+// ✅ 마이페이지 리뷰 카드 클릭 -> 해당 매물 상세 + 리뷰 위치로 이동
+// /static/js/main.js 맨 하단
+
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".review-card");
+  if (!card) return;
+
+  if (e.target.closest("#panelContent")) {
+      return; 
+  }
+
+  const cid = card.dataset.cid;
+  if (!cid) return;
+
+  location.href = `/main?cid=${cid}&focus=review`;
+});
