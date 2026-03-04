@@ -49,6 +49,7 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/"),
                     new AntPathRequestMatcher("/main"),
                     new AntPathRequestMatcher("/error"),
+                    new AntPathRequestMatcher("/mypage/**"),                    
                     new AntPathRequestMatcher("/user/login"),
                     new AntPathRequestMatcher("/user/signup"),
                     new AntPathRequestMatcher("/user/find-id**"),
