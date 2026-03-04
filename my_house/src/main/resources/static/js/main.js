@@ -265,6 +265,7 @@ function initComplexBoundsSync(map) {
 		                <div class="fw-bold" style="font-size:14px;">${it.title}</div>
 		                <div class="small text-muted">${it.address}</div>
 		            </div>
+				<a href="#" class="heart-btn"><i class="bi bi-heart"></i></a>
 		        </div>
 		    </div>
 		`).join("");
