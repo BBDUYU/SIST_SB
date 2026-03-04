@@ -52,11 +52,19 @@
         </div>
 
         <div class="section">
-          <div class="photo">
-            <div class="photoTag">대충 사진</div>
-            <div class="photoHint">사진 1/1</div>
-          </div>
-        </div>
+		  <div class="photo-wrapper" style="position:relative; border-radius:12px; overflow:hidden;">
+		    <div id="roadview" style="width:100%; height:200px; background:#eee;"></div>
+		    
+		    <button type="button" class="btn-rv-expand" 
+		            style="position:absolute; top:10px; right:10px; z-index:20; background:rgba(0,0,0,0.6); color:#fff; border:none; padding:5px 10px; border-radius:4px; font-size:0.75rem;">
+		      <i class="bi bi-arrows-fullscreen"></i> 크게보기
+		    </button>
+		
+		    <div class="photoTag">로드뷰</div>
+		  </div>
+		</div>
+		
+		
 
         <div class="section">
           <h3>기본 정보</h3>
@@ -73,14 +81,35 @@
           <div class="safetyRow">
             <div class="scoreCard">
               <div class="scoreTop">
-                <div class="scoreLabel">안전 점수</div>
-                <div class="badge" th:text="${property.safetyScore + '점'}">78점</div>
-              </div>
+				  <div class="scoreLabel">
+				    안전 점수 
+				    <span class="info-tooltip-wrap">
+				      <i class="bi bi-question-circle"></i>
+				      <div class="info-tooltip-content">
+				        <div class="tooltip-title">💡 안전 점수 산정 기준</div>
+				        
+				        <ul th:if="${property.address.contains('서울')}">
+				          <li>📹 <b>CCTV (40점)</b>: 300m 내 개수 기반</li>
+				          <li>🚨 <b>경찰 시설 (30점)</b>: 주변 치안 시설 분포</li>
+				          <li>🌙 <b>안심 귀갓길 (30점)</b>: 300m 이내 만점</li>
+				        </ul>
+				
+				        <ul th:unless="${property.address.contains('서울')}">
+				          <li>📹 <b>CCTV (약 57점)</b>: 개수 기반 x 1.42</li>
+				          <li>🚨 <b>경찰 시설 (약 43점)</b>: 치안 시설 x 1.42</li>
+				          <li class="tooltip-note">※ 서울 외 지역은 귀갓길 데이터가 없어 타 항목 비중을 높여 계산되었습니다.</li>
+				        </ul>
+				      </div>
+				    </span>
+				  </div>
+				  <div class="badge" th:text="${property.safetyScore + '점'}">78점</div>
+				</div>
               <div class="mini">주변 치안/시설 데이터를 종합해 점수화했어요.</div>
               <div class="barWrap">
                 <div class="bar" th:style="'width:' + ${property.safetyScore} + '%;'"></div>
               </div>
             </div>
+            
           </div>
 
           <div class="list">
@@ -97,7 +126,7 @@
                 <b>🌙 여성안심귀갓길</b>
                 <div class="muted">가장 가까운 구간</div>
               </div>
-              <div class="badge" th:text="${property.safeRoadDistance + 'm'}">320m</div>
+              <div class="badge" th:text="${property.safeRoadDistance}">320m</div>
             </div>
           </div>
         </div>
@@ -106,38 +135,38 @@
           <h3>생활 인프라</h3>
 
           <div class="grid2">
-            <div class="infraCard">
-              <div class="infraTop">
-                <div class="infraTitle">🚇 지하철</div>
-                <div class="pill good">좋음</div>
-              </div>
-              <div class="infraSub">가장 가까운 역 650m</div>
-            </div>
-
-            <div class="infraCard">
-              <div class="infraTop">
-                <div class="infraTitle">🏪 편의점</div>
-                <div class="pill good">좋음</div>
-              </div>
-              <div class="infraSub">반경 300m 내 5개</div>
-            </div>
-
-            <div class="infraCard">
-              <div class="infraTop">
-                <div class="infraTitle">🏥 병원</div>
-                <div class="pill">보통</div>
-              </div>
-              <div class="infraSub">반경 1km 내 3개</div>
-            </div>
-
-            <div class="infraCard">
-              <div class="infraTop">
-                <div class="infraTitle">🛒 마트</div>
-                <div class="pill warn">아쉬움</div>
-              </div>
-              <div class="infraSub">반경 1km 내 1개</div>
-            </div>
-          </div>
+			  <div class="infraCard">
+			    <div class="infraTop">
+			      <div class="infraTitle">🚇 지하철</div>
+			      <div class="pill good"><span id="subway-count">0</span>개</div>
+			    </div>
+			    <div class="infraSub">반경 1km 이내</div>
+			  </div>
+			
+			  <div class="infraCard">
+			    <div class="infraTop">
+			      <div class="infraTitle">🏪 편의점</div>
+			      <div class="pill good"><span id="cvs-count">0</span>개</div>
+			    </div>
+			    <div class="infraSub">반경 300m 내</div>
+			  </div>
+			
+			  <div class="infraCard">
+			    <div class="infraTop">
+			      <div class="infraTitle">🏥 병원</div>
+			      <div class="pill"><span id="hospital-count">0</span>개</div>
+			    </div>
+			    <div class="infraSub">반경 1km 내</div>
+			  </div>
+			
+			  <div class="infraCard">
+			    <div class="infraTop">
+			      <div class="infraTitle">🛒 마트</div>
+			      <div class="pill warn"><span id="mart-count">0</span>개</div>
+			    </div>
+			    <div class="infraSub">반경 1km 내</div>
+			  </div>
+			</div>
         </div>
 
         <div class="section">
@@ -146,8 +175,49 @@
                   th:attr="data-lat=${property.lat},data-lng=${property.lng}">
             지도에서 매물 위치로 이동
           </button>
+          
         </div>
+        
+		<div class="section">
+		  <h3>리뷰</h3>
+		
+		  <!-- 요약 -->
+		  <div class="reviewSummary">
+		    <div class="avg">
+		      <div class="avgScore" id="avgScore">0.0</div>
+		      <div class="avgStars" id="avgStars" aria-label="평점"></div>
+		      <div class="avgCount"><span id="reviewCount">0</span>개 리뷰</div>
+		    </div>
+		    <div class="hint muted">별점과 한줄 후기를 남겨주세요.</div>
+		  </div>
+		
+		  <!-- 작성 폼 -->
+		  <form class="reviewForm" id="reviewForm"
+		        th:attr="data-pid=${property.cid}">
+		    <div class="starInput" aria-label="별점 선택">
+		      <button type="button" class="starBtn" data-score="1" aria-label="1점">★</button>
+		      <button type="button" class="starBtn" data-score="2" aria-label="2점">★</button>
+		      <button type="button" class="starBtn" data-score="3" aria-label="3점">★</button>
+		      <button type="button" class="starBtn" data-score="4" aria-label="4점">★</button>
+		      <button type="button" class="starBtn" data-score="5" aria-label="5점">★</button>
+		      <input type="hidden" name="rating" id="ratingInput" value="5">
+		      <span class="ratingText" id="ratingText">5점</span>
+		    </div>
+		
+		    <div class="reviewRow">
+		      <input class="reviewInput" id="reviewInput" name="content"
+		             maxlength="200"
+		             placeholder="리뷰를 입력하세요 (최대 200자)" required />
+		      <button class="reviewSubmit" type="submit">등록</button>
+		    </div>
+		  </form>
+		
+		  <!-- 리스트 -->
+		  <ul class="reviewList" id="reviewList"></ul>
+		  <p class="reviewEmpty" id="reviewEmpty">아직 리뷰가 없어요.</p>
+		</div>
 
+<script th:src="@{/js/detail-review.js}"></script>
       </div>
     </div>
   </div>

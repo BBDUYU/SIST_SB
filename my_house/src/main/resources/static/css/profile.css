@@ -1,12 +1,8 @@
 @charset "UTF-8";
 
-html{
-  overflow-y: scroll;          /* 구형/기본 안전장치 */
-  scrollbar-gutter: stable;    /* 최신: 레이아웃 흔들림 방지 */
-}
-
-body {
-  overflow-x: hidden;
+html, body {
+  overflow-y: auto;
+  height: auto;
 }
 
 /* 회원정보 수정 페이지 스타일 */
