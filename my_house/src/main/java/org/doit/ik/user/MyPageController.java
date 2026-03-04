@@ -243,6 +243,9 @@ public class MyPageController {
             Long cid = (w.getComplex() != null ? w.getComplex().getCid() : null);
             
             row.put("cid", cid);
+            
+            row.put("lat", w.getComplex() != null ? w.getComplex().getLatitude() : null);
+            row.put("lng", w.getComplex() != null ? w.getComplex().getLongitude() : null);
 
             String title = (w.getComplex() != null ? w.getComplex().getFullName() : null);
             row.put("title", (title != null && !title.isBlank()) ? title : ("단지ID: " + cid));
