@@ -53,6 +53,10 @@ public class BoardController {
         Board post = boardService.get(postId);
         model.addAttribute("post", post);
         model.addAttribute("replies", boardService.getReplies(postId));
+        
+        User me = currentUser(principal);
+        model.addAttribute("me", me);
+        model.addAttribute("isAdmin", isAdmin(me));
 
         return "board/detail";
     }
@@ -105,18 +109,28 @@ public class BoardController {
 
     @PostMapping("/board/{postId}/edit")
     public String editSubmit(@PathVariable("postId") Long postId,
-                             @ModelAttribute("dto") BoardDTO dto) {
-
-        boardService.update(postId, dto);
+                             @ModelAttribute("dto") BoardDTO dto,
+                             Principal principal) {
+        User me = currentUser(principal);
+        boardService.update(postId, dto, me);
         return "redirect:/board/" + postId;
     }
 
     private String toCategoryCode(String name) {
         return switch (name) {
             case "공지사항" -> "notice";
-            case "Q&A" -> "qna";
+            case "회원질문" -> "qna";
             default -> "free";
         };
+    }
+    
+    @PostMapping("/board/{postId}/reply/{replyId}/delete")
+    public String deleteReply(@PathVariable("postId") Long postId,
+                              @PathVariable("replyId") Long replyId,
+                              Principal principal) {
+        User me = currentUser(principal);
+        boardService.deleteReply(postId, replyId, me);
+        return "redirect:/board/" + postId;
     }
 
     // 댓글
@@ -134,5 +148,25 @@ public class BoardController {
 
         boardService.addReply(postId, content, writer);
         return "redirect:/board/" + postId;
+    }
+    
+    // 유저
+    private User currentUser(Principal principal) {
+        if (principal == null) return null;
+        return userRepository.findByEmail(principal.getName()).orElse(null);
+    }
+
+    private boolean isAdmin(User u) {
+        return u != null && "ROLE_ADMIN".equals(u.getRole());
+    }
+    
+    // 삭제
+    @PostMapping("/board/{postId}/delete")
+    public String deletePost(@PathVariable("postId") Long postId, Principal principal) {
+
+        User me = currentUser(principal); // 너가 만든 currentUser 메서드
+        boardService.delete(postId, me);
+
+        return "redirect:/board";
     }
 }

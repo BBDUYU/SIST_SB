@@ -4,6 +4,7 @@ import org.doit.ik.security.oauth.CustomOAuth2UserService;
 import org.doit.ik.user.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -65,6 +66,17 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/listing/**"),                    
                     new AntPathRequestMatcher("/h2-console/**")
                 ).permitAll()
+                
+	             // 게시판 읽기(목록/상세)
+	             .requestMatchers(HttpMethod.GET, "/board", "/board/*").permitAll()
+	
+	             // 게시판 쓰기/수정/댓글/삭제는 로그인
+	             .requestMatchers(
+	                "/board/write",
+	                "/board/*/edit",
+	                "/board/*/reply**",
+	                "/board/*/delete**"
+	             ).authenticated()
 
                 // 2. 가입 직후 '로그인 된 상태'에서만 접근 가능한 페이지 (Authenticated)
                 // 직방 방식: 가입 완료 -> 자동 로그인 -> 아래 페이지로 리다이렉트
