@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -87,24 +88,32 @@ public class UserController {
     }
 
     @GetMapping("/verify-phone")
-    public String verifyPhoneForm() {
+    public String verifyPhoneForm(@RequestParam("phone") String phone, Model model) {
+        model.addAttribute("phone", phone); 
         return "user/verify-phone";
     }
 
+
     @PostMapping("/api/send-sms")
     @ResponseBody
-    public ResponseEntity<?> sendSms(@RequestParam String phone) {
-        phoneVerificationService.sendVerificationCode(phone);
-        return ResponseEntity.ok("인증번호가 발송되었습니다.");
+    public ResponseEntity<?> sendSms(@RequestParam("phone") String phone) { 
+    	System.out.println("컨트롤러 진입 성공");
+    	try {
+            phoneVerificationService.sendVerificationCode(phone);
+            return ResponseEntity.ok("인증번호가 발송되었습니다.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     @PostMapping("/api/verify-phone")
     @ResponseBody
-    public ResponseEntity<?> verifySms(@RequestParam String phone, 
-                                      @RequestParam String code, 
+    public ResponseEntity<?> verifySms(@RequestBody PhoneVerificationRequest request, 
                                       Authentication auth) {
-        if (phoneVerificationService.verifyCode(phone, code)) {
-            userService.updatePhone(auth.getName(), phone);
+        // DTO에서 데이터를 꺼내서 사용
+        if (phoneVerificationService.verifyCode(request.getPhone(), request.getCode())) {
+            userService.updatePhone(auth.getName(), request.getPhone());
             return ResponseEntity.ok("Success");
         }
         return ResponseEntity.badRequest().body("인증번호가 일치하지 않습니다.");
@@ -126,6 +135,8 @@ public class UserController {
             redirectAttributes.addFlashAttribute("phone", phone);
             return "redirect:/user/find-id-verify"; 
         } catch (Exception e) {
+        	System.out.println("아이디 찾기 실패 원인: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/user/find-id";
         }
@@ -172,7 +183,7 @@ public class UserController {
         try {
             findPasswordService.resetAndSendPassword(email);
             redirectAttributes.addFlashAttribute("message", "이메일로 임시 비밀번호가 발급되었습니다.");
-            return "redirect:/user/login"; 
+            return "redirect:/user/login?sent=true"; 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/user/find-password";
@@ -186,9 +197,23 @@ public class UserController {
 
     @PostMapping("/withdraw")
     public String withdrawSubmit(HttpServletRequest request, HttpServletResponse response) {
+     
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        userService.withdrawCurrentUser(auth);
-        new SecurityContextLogoutHandler().logout(request, response, auth);
+        
+        if (auth != null) {
+         
+            userService.withdrawCurrentUser(auth); 
+
+   
+            new SecurityContextLogoutHandler().logout(request, response, auth);
+        }
+
         return "redirect:/main?withdraw=success";
+    }
+    
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/main";
     }
 }

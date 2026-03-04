@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nextBtn.classList.contains('active')) {
             const phone = phoneInput.value;
             
-            // ✅ 서버에 인증번호 발송 요청 (POST)
+         
             fetch('/user/api/send-sms', { 
                 method: 'POST',
                 headers: {

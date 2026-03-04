@@ -10,6 +10,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     List<Review> findByUser_UidAndDeletedAtIsNullOrderByCreatedAtDesc(Long uid);
     long countByUser_UidAndDeletedAtIsNull(Long uid);
+    
+    boolean existsByComplex_CidAndUser_UidAndStatus(Long cid, Long uid, Review.ReviewStatus status);
 
     List<Review> findByComplex_CidAndStatusOrderByCreatedAtDesc(Long cid, ReviewStatus status);
     long countByComplex_CidAndStatus(Long cid, ReviewStatus status);

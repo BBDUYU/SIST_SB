@@ -8,12 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.doit.ik.complex.RecentlyViewed; // ✅ complex 패키지 엔티티 사용
+import org.doit.ik.complex.RecentlyViewed;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +32,8 @@ public class MyPageController {
     private final ReviewRepository reviewRepository;
     private final InquiryRepository inquiryRepository;
     private final WishlistRepository wishlistRepository;
+    private final ProfileService profileService;
+    private final InquiryService inquiryService;
 
     @GetMapping({"", "/"})
     public String mypage(Model model, Principal principal) {
@@ -41,7 +45,12 @@ public class MyPageController {
         // 로그인 안 된 상태면(전체허용 테스트 등)
         if (principal == null) {
             model.addAttribute("user", Map.of());
-            model.addAttribute("stats", Map.of("recentView", 0, "reviewCount", 0, "inquiryCount", 0));
+            model.addAttribute("stats", Map.of(
+                    "recentView", 0,
+                    "reviewCount", 0,
+                    "inquiryCount", 0,
+                    "wishlistCount", 0
+            ));
             model.addAttribute("properties", List.of());
             model.addAttribute("reviewStats", Map.of("averageScore", 0.0));
             model.addAttribute("reviews", List.of());
@@ -64,7 +73,7 @@ public class MyPageController {
         user.put("grade", loginUser.getRole());
         user.put("email", loginUser.getEmail());
         user.put("phone", loginUser.getPhone());
-        user.put("address", ""); // user 테이블에 주소 없으면 빈값
+        user.put("address", "");
         user.put("nickname", loginUser.getNickname());
         model.addAttribute("user", user);
 
@@ -74,16 +83,17 @@ public class MyPageController {
         long recentCnt = recentlyViewedRepository.countByUser_Uid(uid);
         long reviewCnt = reviewRepository.countByUser_UidAndDeletedAtIsNull(uid);
         long inquiryCnt = inquiryRepository.countByUser_UidAndDeletedFalse(uid);
+        long wishlistCnt = wishlistRepository.countByUser_Uid(uid);
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("recentView", recentCnt);
         stats.put("reviewCount", reviewCnt);
         stats.put("inquiryCount", inquiryCnt);
+        stats.put("wishlistCount", wishlistCnt);
         model.addAttribute("stats", stats);
 
         // -----------------------
         // 3) 최근본매물(properties)
-        // complex.RecentlyViewed는 cid 필드가 아니라 complex 관계임
         // -----------------------
         List<RecentlyViewed> recentRows =
                 recentlyViewedRepository.findTop4ByUser_UidOrderByViewedAtDesc(uid);
@@ -91,8 +101,6 @@ public class MyPageController {
         List<Map<String, Object>> properties = new ArrayList<>();
         for (RecentlyViewed rv : recentRows) {
             Map<String, Object> p = new HashMap<>();
-
-            // 디자인 유지용 기본값
             p.put("imageUrl", "/images/sample/property1.jpg");
 
             Long cid = (rv.getComplex() != null ? rv.getComplex().getCid() : null);
@@ -102,14 +110,12 @@ public class MyPageController {
             p.put("type", "");
             p.put("price", "");
             p.put("viewTime", toAgo(rv.getViewedAt()));
-
             properties.add(p);
         }
         model.addAttribute("properties", properties);
 
         // -----------------------
         // 4) 리뷰
-        // Review 엔티티는 Complex complex 관계라서 getCid() 없음
         // -----------------------
         Double avg = reviewRepository.avgRating(uid);
         double avgScore = (avg == null) ? 0.0 : Math.round(avg * 10.0) / 10.0;
@@ -118,13 +124,29 @@ public class MyPageController {
         reviewStats.put("averageScore", avgScore);
         model.addAttribute("reviewStats", reviewStats);
 
+        // ✅ 변경: complex까지 같이 로딩되도록 repository 쪽에서 처리(아래 참고)
         List<Review> reviewRows =
                 reviewRepository.findByUser_UidAndDeletedAtIsNullOrderByCreatedAtDesc(uid);
 
         List<Map<String, Object>> reviews = new ArrayList<>();
         for (Review r : reviewRows) {
             Map<String, Object> row = new HashMap<>();
-            row.put("propertyName", "단지ID: " + (r.getComplex() != null ? r.getComplex().getCid() : ""));
+
+            // ✅ 변경: cid 대신 complex.full_name 표시
+            String fullName = null;
+            if (r.getComplex() != null) {
+                // Complex 엔티티에 fullName getter가 있어야 함 (컬럼 full_name 매핑)
+                fullName = r.getComplex().getFullName();
+            }
+
+            if (fullName == null || fullName.isBlank()) {
+                // fallback (혹시 full_name이 없으면 기존 cid라도 보이게)
+                Long cid = (r.getComplex() != null ? r.getComplex().getCid() : null);
+                row.put("propertyName", "단지ID: " + (cid != null ? cid : ""));
+            } else {
+                row.put("propertyName", fullName);
+            }
+
             row.put("rating", r.getRating());
             row.put("date", formatDate(r.getCreatedAt()));
             row.put("content", r.getContent());
@@ -138,7 +160,7 @@ public class MyPageController {
         // 5) 문의
         // -----------------------
         List<Inquiry> inquiryRows =
-        	    inquiryRepository.findByUser_UidAndDeletedFalseOrderByCreatedAtDesc(uid);
+                inquiryRepository.findByUser_UidAndDeletedFalseOrderByCreatedAtDesc(uid);
 
         List<Map<String, Object>> inquiries = new ArrayList<>();
         for (Inquiry iq : inquiryRows) {
@@ -172,12 +194,30 @@ public class MyPageController {
         long days = d.toDays();
         return days + "일 전";
     }
-    
+
+    // 내 정보 수정
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
         model.addAttribute("isLogin", principal != null);
         model.addAttribute("kakaoJsKey", kakaoJsKey);
         model.addAttribute("alarmCount", 3);
+
+        if (principal == null) {
+            model.addAttribute("user", Map.of());
+            return "/mypage/profile";
+        }
+
+        String email = principal.getName();
+        User loginUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("로그인 사용자 없음: " + email));
+
+        Map<String, Object> user = new HashMap<>();
+        user.put("nickname", loginUser.getNickname());
+        user.put("phone", loginUser.getPhone());
+        user.put("email", loginUser.getEmail());
+        user.put("name", loginUser.getName());
+
+        model.addAttribute("user", user);
         return "/mypage/profile";
     }
 
@@ -188,7 +228,7 @@ public class MyPageController {
         model.addAttribute("alarmCount", 3);
         return "/mypage/inquiry";
     }
-    
+
     @GetMapping("/wishlist")
     public String wishlist(Model model, Principal principal) {
 
@@ -209,11 +249,46 @@ public class MyPageController {
 
         var wishlistRows = wishlistRepository.findByUser_UidOrderByCreatedAtDesc(uid);
 
-        model.addAttribute("wishlistCount",
-                wishlistRepository.countByUser_Uid(uid));
-
+        model.addAttribute("wishlistCount", wishlistRepository.countByUser_Uid(uid));
         model.addAttribute("wishlists", wishlistRows);
 
         return "mypage/wishlist";
+    }
+
+    @PostMapping("/profile/update")
+    public String updateProfile(ProfileUpdateRequest req,
+                                Principal principal,
+                                RedirectAttributes ra) {
+        if (principal == null) return "redirect:/user/login";
+
+        try {
+            profileService.updateProfile(principal.getName(), req);
+            ra.addFlashAttribute("msg", "저장되었습니다.");
+            return "redirect:/mypage";
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/mypage/profile";
+        }
+    }
+
+    @PostMapping("/inquiry/create")
+    public String createInquiry(InquiryCreateRequest req,
+                                Principal principal,
+                                RedirectAttributes ra) {
+        if (principal == null) return "redirect:/user/login";
+
+        try {
+            Long id = inquiryService.createInquiry(principal.getName(), req);
+            ra.addFlashAttribute("msg", "문의가 등록되었습니다. (ID=" + id + ")");
+            return "redirect:/mypage";
+
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/mypage/inquiry";
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "문의 등록 실패: " + e.getMessage());
+            return "redirect:/mypage/inquiry";
+        }
     }
 }
