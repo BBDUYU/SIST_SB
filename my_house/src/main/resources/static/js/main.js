@@ -351,7 +351,12 @@ function initComplexBoundsSync(map) {
 		        return `
 		        <div class="card house-card mb-3 house-item" data-key="${it.cid}">
 		            <div class="card-body d-flex gap-3 align-items-center">
-		                <div class="thumb"></div>
+		                <div class="rv-thumb-container" 
+		                 data-lat="${it.latitude}" 
+		                 data-lng="${it.longitude}"
+		                 style="width:90px; height:90px; flex-shrink:0; border-radius:12px; overflow:hidden; background:#f1f5f9; display:flex; align-items:center; justify-content:center;">
+		                <i class="bi bi-geo-alt-fill text-muted opacity-50"></i>
+		            </div>
 		                <div class="flex-grow-1">
 		                    <div class="fw-semibold">${it.title || ""}</div>
 		                    <div class="small text-muted">${it.address || ""}</div>
@@ -363,6 +368,7 @@ function initComplexBoundsSync(map) {
 		            </div>
 		        </div>`;
 		    }).join("");
+			lazyLoadRoadview();
 		}
     };
 
