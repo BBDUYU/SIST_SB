@@ -19,4 +19,5 @@ public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
     	"select w.complex.cid from Wishlist w where w.user.uid = :uid"
     )
     List<Long> findCidListByUid(@org.springframework.data.repository.query.Param("uid") Long uid);
+    
 }
