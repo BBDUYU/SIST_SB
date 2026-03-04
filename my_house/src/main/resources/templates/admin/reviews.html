@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: html(~{::section}, '리뷰상태관리')">
+
+<section class="admin-page py-4">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <div class="container admin-shell">
+
+    <div class="admin-hero">
+      <div>
+        <h1 class="admin-title">리뷰상태관리</h1>
+        <p class="admin-subtitle mb-0">매물 리뷰를 승인/반려/숨김 처리합니다.</p>
+      </div>
+      <a class="btn btn-light fw-bold" th:href="@{/admin}">대시보드</a>
+    </div>
+
+    <nav class="admin-nav">
+      <a th:href="@{/admin}">대시보드</a>
+      <a th:href="@{/admin/members}">회원관리</a>
+      <a th:href="@{/admin/reviews}" class="active">리뷰상태관리</a>
+      <a th:href="@{/admin/qna}">질문/답변</a>
+    </nav>
+
+    <div class="admin-card">
+      <div class="admin-toolbar">
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="badge-pill badge-ok" th:href="@{/admin/reviews(status='APPROVED')}">승인</a>
+          <a class="badge-pill badge-warn" th:href="@{/admin/reviews(status='PENDING')}">대기</a>
+          <a class="badge-pill badge-danger" th:href="@{/admin/reviews(status='REJECTED')}">반려</a>
+          <a class="badge-pill" th:href="@{/admin/reviews(status='HIDDEN')}">숨김</a>
+        </div>
+
+        <div class="admin-search">
+          <input class="form-control" data-admin-search
+                 placeholder="매물명/리뷰내용/작성자 검색 (Enter)"
+                 th:value="${param.q}">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+          <thead>
+          <tr>
+            <th style="width:12%;">상태</th>
+            <th>매물</th>
+            <th>리뷰</th>
+            <th style="width:14%;">작성자</th>
+            <th style="width:14%;">작성일</th>
+            <th style="width:18%;">관리</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <!-- TODO: th:each="r : ${reviews}" -->
+          <tr>
+            <td><span class="badge-pill badge-warn">PENDING</span></td>
+            <td>
+              <div class="fw-bold">마포구 ○○아파트 84㎡</div>
+              <div class="text-muted" style="font-size:.85rem;">매물ID #123</div>
+            </td>
+            <td>
+              <div class="fw-bold">“역이 가까워서 좋아요”</div>
+              <div class="text-muted" style="font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:480px;">
+                관리자가 확인해야 하는 리뷰 내용이 여기 들어갑니다…
+              </div>
+            </td>
+            <td>게스트</td>
+            <td>2026-03-03</td>
+            <td class="admin-actions">
+              <button class="btn btn-outline-primary btn-sm" type="button">승인</button>
+              <button class="btn btn-outline-danger btn-sm" type="button">반려</button>
+              <button class="btn btn-outline-secondary btn-sm" type="button">숨김</button>
+            </td>
+          </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 페이징(나중에 Page<Review> 붙이면 board처럼 복붙 가능) -->
+      <div class="text-muted mt-3" style="font-size:.9rem;">
+        * 현재는 UI 골격. 나중에 status/q/page 쿼리로 페이징 붙이면 완성.
+      </div>
+    </div>
+
+  </div>
+
+  <script th:src="@{/js/admin.js}"></script>
+</section>
+</html>

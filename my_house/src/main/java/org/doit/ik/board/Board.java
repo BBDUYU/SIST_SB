@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -34,6 +35,11 @@ public class Board {
     @Enumerated(EnumType.STRING) 
     @Column(nullable = false)
     private BoardStatus status = BoardStatus.ACTIVE;
+    
+    @PrePersist
+    public void prePersist() {
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+    }
 }
 enum BoardStatus {
     ACTIVE, INACTIVE

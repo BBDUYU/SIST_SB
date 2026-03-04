@@ -1,0 +1,115 @@
+:root{
+  --brand:#1E3A8A;
+  --bg:#F6F8FB;
+  --card:#fff;
+  --line:#E7ECF3;
+  --text:#0F172A;
+  --muted:#64748B;
+  --shadow:0 10px 24px rgba(15,23,42,.06);
+  --r16:16px;
+}
+
+.admin-page{
+  background: var(--bg);
+  color: var(--text);
+}
+
+.admin-shell{
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-hero{
+  background: linear-gradient(135deg, #1E3A8A 0%, #3557BF 100%);
+  color:#fff;
+  border-radius: 18px;
+  padding: 22px 22px;
+  box-shadow: 0 12px 30px rgba(30,58,138,.18);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 16px;
+}
+
+.admin-title{
+  margin:0;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+.admin-subtitle{ margin:6px 0 0; color: rgba(255,255,255,.85); }
+
+.admin-nav{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom: 14px;
+}
+
+.admin-nav a{
+  text-decoration:none;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.10);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px rgba(15,23,42,.06);
+}
+
+.admin-nav a.active{
+  background: var(--brand);
+  border-color: var(--brand);
+  color:#fff;
+}
+
+.admin-card{
+  background: var(--card);
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: var(--r16);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.admin-toolbar{
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-search{
+  width: 320px;
+  max-width: 100%;
+  position: relative;
+}
+.admin-search input{
+  width:100%;
+  border-radius: 12px;
+  padding-left: 12px;
+}
+
+.admin-table thead th{
+  font-size: .9rem;
+  font-weight: 900;
+  color: #64748B;
+  background:#F8FAFC;
+}
+.badge-pill{
+  display:inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 900;
+  border:1px solid rgba(15,23,42,.10);
+}
+.badge-ok{ background:#ECFDF5; color:#047857; }
+.badge-warn{ background:#FFF7ED; color:#9A3412; }
+.badge-danger{ background:#FEF2F2; color:#B91C1C; }
+
+.admin-actions .btn{
+  border-radius: 10px;
+  font-weight: 800;
+}
