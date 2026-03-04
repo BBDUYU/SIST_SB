@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: html(~{::section}, '관리자 등록')">
+
+<section class="admin-page py-4">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    
+    <div class="container admin-shell">
+        <div class="admin-hero">
+            <div>
+                <h1 class="admin-title">새 관리자 등록</h1>
+                <p class="admin-subtitle mb-0">새로운 관리 계정을 생성합니다.</p>
+            </div>
+            <a class="btn btn-light fw-bold" th:href="@{/admin/members}">목록으로</a>
+        </div>
+
+        <div class="admin-card mt-4">
+            <div class="p-4">
+                <form id="adminRegisterForm">
+                    <div class="mb-3">
+                        <label class="form-label">이메일 (ID)</label>
+                        <input type="email" name="email" class="form-control" placeholder="example@doit.ik" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">닉네임</label>
+                        <input type="text" name="nickname" class="form-control" placeholder="관리자 별명" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">비밀번호</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">권한 설정</label>
+                        <select name="role" class="form-select">
+                            <option value="ROLE_ADMIN">최고 관리자 (ADMIN)</option>
+                            <option value="ROLE_MANAGER">부 관리자 (MANAGER)</option>
+                        </select>
+                    </div>
+
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-secondary me-2" onclick="history.back()">취소</button>
+                        <button type="submit" class="btn btn-primary">등록하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/adminMember.js}"></script>
+    <script>
+        document.getElementById('adminRegisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // 기존 adminMemberModule의 sendRequest 로직을 활용하거나 직접 호출
+            // 예: adminMemberModule.registerAdmin(data);
+            alert("등록 기능(API)은 서버 컨트롤러 구현 후 연결하세요!");
+        });
+    </script>
+</section>
+</html>

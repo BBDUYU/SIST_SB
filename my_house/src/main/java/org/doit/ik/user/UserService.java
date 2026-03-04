@@ -8,4 +8,7 @@ public interface UserService {
     void withdrawCurrentUser(Authentication authentication);
     void withdraw(String email);
     void updatePhone(String email, String phone);
+  
+    
+    
 }

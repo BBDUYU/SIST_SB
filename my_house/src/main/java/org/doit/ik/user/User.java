@@ -64,6 +64,6 @@ public class User {
     private LocalDateTime deletedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20) // ✅ 길이를 20으로 명시적으로 지정
     private UserStatus status = UserStatus.ACTIVE;
 }

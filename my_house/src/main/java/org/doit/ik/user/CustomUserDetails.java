@@ -67,9 +67,11 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
+ // CustomUserDetails.java 내부
     @Override
     public boolean isEnabled() {
-        // ACTIVE만 true (원하면 SUSPENDED 같은 상태도 여기서 제어)
-        return status == null || status == UserStatus.ACTIVE;
+        // ✅ 기존: return status == null || status == UserStatus.ACTIVE;
+        // ✅ 변경: status가 오직 ACTIVE일 때만 로그인을 허용함 (BANNED 차단)
+        return this.status == UserStatus.ACTIVE;
     }
 }
