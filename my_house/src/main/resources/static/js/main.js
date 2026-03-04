@@ -89,6 +89,9 @@ document.addEventListener("DOMContentLoaded", () => {
 			        path.setAttribute("stroke", isOn ? "#DC2626" : "#0F172A");
 			    }
 			}
+			if (window.initReviewModule) {
+			            window.initReviewModule(propertyKey);
+			        }
         });
 
     };
@@ -860,9 +863,15 @@ function updateInfraUI(id, count, threshold) {
 }
 
 // ✅ 마이페이지 리뷰 카드 클릭 -> 해당 매물 상세 + 리뷰 위치로 이동
+// /static/js/main.js 맨 하단
+
 document.addEventListener("click", (e) => {
   const card = e.target.closest(".review-card");
   if (!card) return;
+
+  if (e.target.closest("#panelContent")) {
+      return; 
+  }
 
   const cid = card.dataset.cid;
   if (!cid) return;
