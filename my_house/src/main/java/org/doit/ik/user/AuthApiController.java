@@ -13,10 +13,7 @@ public class AuthApiController {
 
     private final FindPasswordService findPasswordService; // 기존 서비스 활용
 
-    /**
-     * 1. 회원가입용 이메일 인증번호 발송
-     * JS의 '인증하기' 버튼 클릭 시 호출
-     */
+  
     @PostMapping("/email-send")
     public ResponseEntity<String> sendSignupCode(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -29,10 +26,7 @@ public class AuthApiController {
         }
     }
 
-    /**
-     * 2. 인증번호 일치 여부 확인
-     * JS의 '확인' 버튼 클릭 시 호출
-     */
+    
     @PostMapping("/email-verify")
     public ResponseEntity<String> verifySignupCode(@RequestBody Map<String, String> request) {
         String email = request.get("email");

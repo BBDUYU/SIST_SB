@@ -410,3 +410,27 @@ body{
   background: #fff;
   transform: scale(1.1);
 }
+
+
+/* 썸네일 */
+/* detail.css 또는 style 태그 */
+.rv-thumb-container {
+    position: relative;
+    width: 90px;
+    height: 90px;
+}
+
+/* 로드뷰 엔진 내부의 실제 캔버스/이미지 영역을 1.5배 크게 그린 뒤 0.66배로 줄임 */
+.rv-thumb-container > div:first-child {
+    width: 150% !important;
+    height: 150% !important;
+    transform: scale(0.666); /* 1/1.5 값 */
+    transform-origin: top left;
+}
+
+/* 불필요한 UI는 여전히 숨김 */
+.rv-thumb-container [id*="_box_util"], 
+.rv-thumb-container [id*="_kakao_copyright"],
+.rv-thumb-container [id*="_mm_box"] {
+    display: none !important;
+}

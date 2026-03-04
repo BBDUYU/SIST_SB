@@ -160,3 +160,38 @@ form{
 @media (max-width: 640px){
   .card{ padding: 30px 18px; }
 }
+
+.success-toast {
+    position: fixed;
+    bottom: 50px;           /* 하단에서 50px 띄움 */
+    left: 50%;              /* 화면 가로 중앙 기준 */
+    transform: translateX(-50%); /* 정확한 중앙 정렬을 위해 왼쪽으로 50% 이동 */
+    background: #ffffff;
+    border-top: 5px solid #4e73df; /* 위쪽에 포인트 색상 부여 */
+    padding: 15px 35px;     /* 가로 패딩을 조금 더 넓힘 */
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column; /* 텍스트를 위아래로 정렬 */
+    align-items: center;
+    text-align: center;
+    animation: toastSlideUp 0.5s ease forwards; /* 아래에서 위로 올라오는 효과 */
+}
+.toast-content p {
+    margin: 0;
+    color: #333;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.toast-content .sub {
+    font-size: 13px;
+    color: #888;
+    margin-top: 4px;
+}
+
+@keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}

@@ -69,12 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const lng = parseFloat(btn.getAttribute("data-lng"));
                 updateInfraStats(lat, lng);
 				initRoadview('roadview', lat, lng);
-				if (window.initReviewModule) {
-	                window.initReviewModule(propertyKey);
-	                console.log("리뷰 모듈 호출 성공: " + propertyKey);
-	            } else {
-	                console.error("initReviewModule 함수를 찾을 수 없습니다.");
-	            }
+				
             }
 			
 
@@ -377,6 +372,49 @@ function initComplexBoundsSync(map) {
     });
     window.__UPDATE_COMPLEX_BY_BOUNDS__ = update;
     update();
+}
+
+
+function lazyLoadRoadview() {
+    const containers = document.querySelectorAll('.rv-thumb-container');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                const lat = el.getAttribute('data-lat');
+                const lng = el.getAttribute('data-lng');
+                
+                // 화면에 보일 때만 로드뷰 생성
+                const rv = new kakao.maps.Roadview(el);
+                const rvClient = new kakao.maps.RoadviewClient();
+                const pos = new kakao.maps.LatLng(lat, lng);
+                
+				rvClient.getNearestPanoId(pos, 50, (panoId) => {
+				    if (panoId) {
+				        rv.setPanoId(panoId, pos);
+
+				        // ✅ 핵심: 로드뷰의 시야를 넓게(줌 아웃) 설정
+				        // 숫자가 작을수록(음수일수록) 더 멀리, 더 넓게 보입니다.
+				        rv.setViewpoint({
+				            pan: 0,
+				            tilt: 0,
+				            zoom: -2 // 기본값은 0, -2 정도로 낮추면 훨씬 넓게 보입니다.
+				        });
+
+				        el.style.pointerEvents = "none";
+				    } else {
+				        el.innerHTML = '<i class="bi bi-camera-video-off text-muted"></i>';
+				    }
+				});
+                
+                // 한 번 로드되면 감시 중단
+                observer.unobserve(el);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    containers.forEach(c => observer.observe(c));
 }
 
 document.addEventListener("DOMContentLoaded", function () {

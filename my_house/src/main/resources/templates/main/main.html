@@ -15,9 +15,9 @@
           <!-- ✅ 리스트 화면: 필터바는 head(고정) -->
           <div class="panel-head">
             <div class="filter-bar d-flex gap-2">
-              <select class="form-select"><option selected>주거형태</option></select>
-              <select class="form-select"><option selected>평수</option></select>
-              <select class="form-select"><option selected>가격</option></select>
+              <select id="filterType" class="form-select"><option selected>주거형태</option></select>
+              <select id="filterArea" class="form-select"><option selected>평수</option></select>
+              <select id="filterPrice" class="form-select"><option selected>전/월세</option></select>
             </div>
           </div>
 
@@ -56,7 +56,7 @@
 
       <!-- RIGHT MAP -->
       <section class="col-md-9 map-wrap">
-        <div id="map" class="map-container"></div>
+        <div id="map" class="map-container" th:attr="data-apikey=${kakaoJsKey}"></div>
 
 		<!-- 필터 버튼 20260301 -->
 		<div class="map-filter-group">
@@ -95,6 +95,7 @@
 	  </div>
 	</div>
   <script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsKey}&libraries=services|"></script>
+  
   <script th:src="@{/js/detail-review.js}"></script>
   <script th:src="@{/js/main.js}"></script>
 </section>
