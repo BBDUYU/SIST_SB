@@ -54,6 +54,7 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/user/find-id**"),
                     new AntPathRequestMatcher("/user/find-password**"),
                     new AntPathRequestMatcher("/api/auth/**"),
+                    new AntPathRequestMatcher("/api/**"), 
                     new AntPathRequestMatcher("/css/**"),
                     new AntPathRequestMatcher("/js/**"),
                     new AntPathRequestMatcher("/image/**"),
@@ -63,14 +64,13 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/h2-console/**")
                 ).permitAll()
 
-                // 2. 가입 직후 '로그인 된 상태'에서만 접근 가능한 페이지 (Authenticated)
-                // 직방 방식: 가입 완료 -> 자동 로그인 -> 아래 페이지로 리다이렉트
+             
                 .requestMatchers(
                     new AntPathRequestMatcher("/user/setup-phone"),
                     new AntPathRequestMatcher("/user/verify-phone"),
                     new AntPathRequestMatcher("/user/api/send-sms"),
                     new AntPathRequestMatcher("/user/api/verify-phone")
-                ).authenticated()
+                ).permitAll()
 
                 .anyRequest().authenticated()
             )
@@ -90,11 +90,22 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/main", false)
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
+                    
                 )
+             // -----------------------------------------------------------
+                // ✅ 이 부분 추가: OAuth2 로그인 실패 시 로그를 남깁니다.
+                .failureHandler((request, response, exception) -> {
+                    System.out.println("!!!!! OAuth2 Login Failed !!!!!");
+                    System.out.println("Error Message: " + exception.getMessage());
+                    exception.printStackTrace(); // 전체 에러 스택트레이스 출력
+                    response.sendRedirect("/user/login?error");
+                })
+                // -----------------------------------------------------------
             )
 
             .logout(logout -> logout
                 .logoutUrl("/user/logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/user/logout", "GET"))
                 .logoutSuccessUrl("/main")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")

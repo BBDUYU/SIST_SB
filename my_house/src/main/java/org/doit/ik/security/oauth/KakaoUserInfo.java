@@ -31,8 +31,8 @@ public class KakaoUserInfo implements OAuth2UserInfo {
     }
 
     @Override public String getNickname() {
-        return profile == null ? null : (String) profile.get("nickname");
+        String nickname = profile == null ? null : (String) profile.get("nickname");
+        return nickname == null ? "카카오사용자" : nickname;
     }
-
     @Override public Map<String, Object> getAttributes() { return attributes; }
 }

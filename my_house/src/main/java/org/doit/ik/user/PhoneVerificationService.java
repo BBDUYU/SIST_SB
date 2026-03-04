@@ -1,35 +1,39 @@
 package org.doit.ik.user;
 
-import org.springframework.stereotype.Service;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class PhoneVerificationService {
 
-    // 메모리 저장소 (실제 운영 시에는 Redis 추천)
-    private final ConcurrentHashMap<String, String> verificationStorage = new ConcurrentHashMap<>();
+    private final PhoneAuthRepository phoneAuthRepository; 
+    private final SmsService smsService; 
 
-    // 1. 4자리 인증번호 생성 및 발송
+    
+    @Transactional
     public void sendVerificationCode(String phone) {
-        String code = String.format("%04d", new Random().nextInt(10000));
+       
+        String code = String.format("%06d", new Random().nextInt(1000000));
         
-        // 서버 콘솔에 출력 (개발용)
-        System.out.println("========================================");
-        System.out.println("[SMS 발송] 번호: " + phone + " | 인증번호: " + code);
-        System.out.println("========================================");
+       
+        System.out.println("[회원가입 SMS 발송] 번호: " + phone + " | 인증번호: " + code);
         
-        verificationStorage.put(phone, code);
-        // 유효시간 설정 로직 등을 추가할 수 있습니다.
+        
+        PhoneAuth auth = new PhoneAuth(phone, code);
+        phoneAuthRepository.save(auth);
+
+       
+        smsService.sendSms(phone, "[MyHouse] 회원가입 인증번호: " + code);
     }
 
-    // 2. 인증번호 검증
+    // 2. DB에서 가장 최근 인증번호를 꺼내어 검증
+    @Transactional(readOnly = true)
     public boolean verifyCode(String phone, String inputCode) {
-        String savedCode = verificationStorage.get(phone);
-        if (savedCode != null && savedCode.equals(inputCode)) {
-            verificationStorage.remove(phone); // 인증 성공 시 삭제
-            return true;
-        }
-        return false;
+        return phoneAuthRepository.findTopByPhoneOrderByCreatedAtDesc(phone)
+            .map(auth -> auth.getCode().equals(inputCode))
+            .orElse(false);
     }
 }

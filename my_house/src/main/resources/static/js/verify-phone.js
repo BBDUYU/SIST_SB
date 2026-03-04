@@ -14,29 +14,35 @@ document.addEventListener('DOMContentLoaded', () => {
         verifyBtn.className = codeInput.value.length === 4 ? 'btn-next active' : 'btn-next';
     });
 
-    verifyBtn.addEventListener('click', () => {
-        if (verifyBtn.classList.contains('active')) {
-            const code = codeInput.value;
-            const header = document.getElementById('csrfHeader').value;
-            const token = document.getElementById('csrfToken').value;
+	verifyBtn.addEventListener('click', () => {
+	    if (verifyBtn.classList.contains('active')) {
+	        const code = codeInput.value;
+	        const header = document.getElementById('csrfHeader').value;
+	        const token = document.getElementById('csrfToken').value;
 
-            fetch('/user/api/verify-phone', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    [header]: token
-                },
-                body: new URLSearchParams({ phone: phone, code: code })
-            })
-            .then(res => {
-                if (res.ok) {
-                    alert("인증이 완료되었습니다!");
-                    location.href = "/"; // 메인 페이지 리다이렉트
-                } else {
-                    alert("인증번호가 일치하지 않습니다. 다시 확인해주세요.");
-                }
-            })
-            .catch(err => console.error("Error:", err));
-        }
-    });
+	        fetch('/user/api/verify-phone', {
+	            method: 'POST',
+	            headers: {
+	                // 1. Content-Type을 JSON으로 명시하여 415 에러를 해결합니다.
+	                'Content-Type': 'application/json', 
+	                [header]: token
+	            },
+	            // 2. 데이터를 JSON 문자열로 변환하여 보냅니다.
+	            body: JSON.stringify({ 
+	                phone: phone, 
+	                code: code 
+	            })
+	        })
+	        .then(res => {
+	            if (res.ok) {
+	                alert("인증이 완료되었습니다!");
+	                // 3. 메인 대신 로그인 페이지로 이동하도록 수정합니다.
+	                location.href = "/user/login"; 
+	            } else {
+	                alert("인증번호가 일치하지 않습니다. 다시 확인해주세요.");
+	            }
+	        })
+	        .catch(err => console.error("Error:", err));
+	    }
+	});
 });

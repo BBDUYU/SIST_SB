@@ -17,7 +17,7 @@ public class AuthVerification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // ✅ PK + AUTO_INCREMENT
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long uid;
 
     @Enumerated(EnumType.STRING)

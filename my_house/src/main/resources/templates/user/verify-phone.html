@@ -1,46 +1,26 @@
 <main class="page">
-  <link rel="stylesheet" th:href="@{/css/signup.css}">
-  <style>
-    /* setup-container 스타일 공유 */
-    .verify-msg { font-size: 1.1rem; margin-bottom: 40px; color: #333; }
-    .code-field { border: none; border-bottom: 2px solid #ddd; width: 100%; padding: 10px 0; font-size: 1.5rem; text-align: center; letter-spacing: 10px; outline: none; }
-    .code-field:focus { border-bottom-color: #1a3a83; }
-  </style>
+    <link rel="stylesheet" th:href="@{/css/verify-phone.css}">
+    <link rel="stylesheet" th:href="@{/css/signup.css}">
 
-  <section class="setup-container">
-    <p class="verify-msg">
-      <span id="displayPhone" style="font-weight: bold;">010-XXXX-XXXX</span>로 전송된<br>
-      4자리 숫자를 입력해주세요.
-    </p>
-    
-    <input type="text" id="smsCode" class="code-field" maxlength="4" placeholder="••••">
-    
-    <div class="action-row">
-      <button type="button" class="resend-link" id="btnResendSms">재전송 받기</button>
-    </div>
+    <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}" />
+    <input type="hidden" id="csrfToken" th:value="${_csrf.token}" />
 
-    <button type="button" id="btnVerifySms" class="btn-next">다음</button>
-  </section>
+    <section class="setup-container">
+        <p class="verify-msg">
+            <span id="displayPhone" style="font-weight: bold; color: #002c5f;"></span>로 전송된<br>
+            6자리 숫자를 입력해주세요.
+        </p>
+        
+        <input type="text" id="smsCode" class="code-field" maxlength="4" placeholder="••••" inputmode="numeric">
+        
+        <div class="action-row">
+            <button type="button" class="resend-link" id="btnResendSms">재전송 받기</button>
+        </div>
 
-  <script th:inline="javascript">
-    const codeInput = document.getElementById('smsCode');
-    const verifyBtn = document.getElementById('btnVerifySms');
-    
-    // URL에서 전화번호 파라미터 가져오기 (마스킹 등 처리 가능)
-    const urlParams = new URLSearchParams(window.location.search);
-    document.getElementById('displayPhone').innerText = urlParams.get('phone');
+     
 
-    codeInput.addEventListener('input', () => {
-        verifyBtn.className = codeInput.value.length === 4 ? 'btn-next active' : 'btn-next';
-    });
+        <button type="button" id="btnVerifySms" class="btn-next">완료</button>
+    </section>
 
-    verifyBtn.addEventListener('click', () => {
-        if(verifyBtn.classList.contains('active')) {
-            // 여기에 인증번호 검증 및 DB 저장 API 호출 (fetch)
-            // 성공 시 3초 토스트 메시지 후 메인으로 이동
-            alert("인증이 완료되었습니다!"); 
-            location.href = "/";
-        }
-    });
-  </script>
+    <script th:src="@{/js/verify-phone.js}"></script>
 </main>
