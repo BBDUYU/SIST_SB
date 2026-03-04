@@ -37,9 +37,9 @@ public class Review {
     @Enumerated(EnumType.STRING) 
     @Column(nullable = false)
     private ReviewStatus status = ReviewStatus.ACTIVE;
-
     
-}
-enum ReviewStatus {
-    ACTIVE, INACTIVE
+    public enum ReviewStatus {
+        ACTIVE, INACTIVE
+    }
+    
 }
