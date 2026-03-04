@@ -89,15 +89,18 @@
 
 	            console.log("서버 응답 상태:", res.status);
 
-	            if (res.ok) {
-	                alert('리뷰가 등록되었습니다!');
-	                document.getElementById('reviewInput').value = '';
-	                loadReviews(cid);
-	            } else if (res.status === 401 || res.status === 403) {
-	                alert('로그인이 필요한 서비스입니다.');
-	            } else {
-	                alert('에러 발생: ' + res.status);
-	            }
+				if (res.ok) {
+				    alert('리뷰가 등록되었습니다!');
+				    reviewInput.value = '';
+				    await loadReviews(cid);
+				} else if (res.status === 409) {
+				    // ✅ 중복 작성 시 처리
+				    alert('이미 리뷰를 작성한 매물입니다. 한 매물당 하나의 리뷰만 작성 가능합니다.');
+				} else if (res.status === 401 || res.status === 403) {
+				    alert('로그인이 필요한 서비스입니다.');
+				} else {
+				    alert('에러 발생: ' + res.status);
+				}
 	        } catch (err) {
 	            console.error("Fetch 에러:", err);
 	            alert("서버와 통신할 수 없습니다.");
