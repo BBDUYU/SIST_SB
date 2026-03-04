@@ -18,7 +18,7 @@ public class AuthVerification {
     @Column(name = "verification_id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long uid;
 
     @Enumerated(EnumType.STRING)

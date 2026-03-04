@@ -47,7 +47,6 @@ public class FindPasswordServiceImpl implements FindPasswordService {
         String code = String.valueOf((int)(Math.random() * 899999) + 100000);
 
         AuthVerification auth = new AuthVerification();
-        auth.setUid(0L); 
         auth.setVerifyType(VerifyType.SIGNUP_EMAIL); 
         auth.setChannel(VerifyChannel.EMAIL);
         auth.setTargetValue(email);
