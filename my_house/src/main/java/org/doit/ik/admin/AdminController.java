@@ -16,11 +16,4 @@ public class AdminController {
     return "admin/members";
   }
 
-  @GetMapping("/admin/reviews")
-  public String reviews(Model model, Principal principal) {
-    model.addAttribute("isLogin", principal != null);
-    // TODO: reviews 데이터 model.addAttribute("reviews", ...)
-    return "admin/reviews";
-  }
-
 }

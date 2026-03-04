@@ -9,7 +9,7 @@
     <div class="admin-hero">
       <div>
         <h1 class="admin-title">리뷰상태관리</h1>
-        <p class="admin-subtitle mb-0">매물 리뷰를 승인/반려/숨김 처리합니다.</p>
+        <p class="admin-subtitle mb-0">매물 리뷰를 승인/숨김 처리합니다.</p>
       </div>
       <a class="btn btn-light fw-bold" th:href="@{/admin}">대시보드</a>
     </div>
@@ -23,16 +23,19 @@
     <div class="admin-card">
       <div class="admin-toolbar">
         <div class="d-flex gap-2 flex-wrap">
-          <a class="badge-pill badge-ok" th:href="@{/admin/reviews(status='APPROVED')}">승인</a>
-          <a class="badge-pill badge-warn" th:href="@{/admin/reviews(status='PENDING')}">대기</a>
-          <a class="badge-pill badge-danger" th:href="@{/admin/reviews(status='REJECTED')}">반려</a>
-          <a class="badge-pill" th:href="@{/admin/reviews(status='HIDDEN')}">숨김</a>
+          <a class="badge-pill badge-ok"
+             th:classappend="${status.name() == 'ACTIVE'} ? ' active' : ''"
+             th:href="@{/admin/reviews(status='ACTIVE', q=${q})}">승인</a>
+
+          <a class="badge-pill badge-danger"
+             th:classappend="${status.name() == 'INACTIVE'} ? ' active' : ''"
+             th:href="@{/admin/reviews(status='INACTIVE', q=${q})}">숨김</a>
         </div>
 
         <div class="admin-search">
           <input class="form-control" data-admin-search
                  placeholder="매물명/리뷰내용/작성자 검색 (Enter)"
-                 th:value="${param.q}">
+                 th:value="${q}">
         </div>
       </div>
 
@@ -50,35 +53,63 @@
           </thead>
 
           <tbody>
-          <!-- TODO: th:each="r : ${reviews}" -->
-          <tr>
-            <td><span class="badge-pill badge-warn">PENDING</span></td>
+          <tr th:each="r : ${reviews.content}">
             <td>
-              <div class="fw-bold">마포구 ○○아파트 84㎡</div>
-              <div class="text-muted" style="font-size:.85rem;">매물ID #123</div>
+              <span class="badge-pill"
+                    th:classappend="${r.status.name() == 'ACTIVE'} ? ' badge-ok' : ' badge-danger'"
+                    th:text="${r.status}">ACTIVE</span>
             </td>
+
             <td>
-              <div class="fw-bold">“역이 가까워서 좋아요”</div>
-              <div class="text-muted" style="font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:480px;">
-                관리자가 확인해야 하는 리뷰 내용이 여기 들어갑니다…
-              </div>
+              <div class="fw-bold" th:text="${r.complex != null ? r.complex.title : '(매물없음)'}"></div>
+              <div class="text-muted" style="font-size:.85rem;"
+                   th:text="${r.complex != null ? '매물ID #' + r.complex.cid : ''}"></div>
             </td>
-            <td>게스트</td>
-            <td>2026-03-03</td>
-            <td class="admin-actions">
-              <button class="btn btn-outline-primary btn-sm" type="button">승인</button>
-              <button class="btn btn-outline-danger btn-sm" type="button">반려</button>
-              <button class="btn btn-outline-secondary btn-sm" type="button">숨김</button>
+
+            <td>
+              <div class="fw-bold" th:text="${r.title}">리뷰제목</div>
+              <div class="text-muted"
+                   style="font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:480px;"
+                   th:text="${r.content}">리뷰내용</div>
+            </td>
+
+            <td th:text="${r.user != null ? r.user.nickname : '탈퇴회원'}">작성자</td>
+
+            <td th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'yyyy-MM-dd') : ''}">작성일</td>
+
+            <td>
+              <!-- ACTIVE면 숨김 -->
+              <form th:if="${r.status.name() == 'ACTIVE'}"
+                    th:action="@{/admin/reviews/{id}/hide(id=${r.reviewId})}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="status" th:value="${status}">
+                <input type="hidden" name="q" th:value="${q}">
+                <input type="hidden" name="page" th:value="${reviews.number}">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">숨김</button>
+              </form>
+
+              <!-- INACTIVE면 승인 -->
+              <form th:if="${r.status.name() == 'INACTIVE'}"
+                    th:action="@{/admin/reviews/{id}/approve(id=${r.reviewId})}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="status" th:value="${status}">
+                <input type="hidden" name="q" th:value="${q}">
+                <input type="hidden" name="page" th:value="${reviews.number}">
+                <button class="btn btn-sm btn-outline-primary" type="submit">승인</button>
+              </form>
             </td>
           </tr>
 
+          <tr th:if="${reviews.totalElements == 0}">
+            <td colspan="6" class="text-center text-muted py-4">표시할 리뷰가 없습니다.</td>
+          </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 페이징(나중에 Page<Review> 붙이면 board처럼 복붙 가능) -->
+      <!-- (선택) 페이징 UI는 board/list 페이징 복붙해서 status/q/page 유지 형태로 붙이면 됨 -->
       <div class="text-muted mt-3" style="font-size:.9rem;">
-        * 현재는 UI 골격. 나중에 status/q/page 쿼리로 페이징 붙이면 완성.
+        * 승인(ACTIVE) / 숨김(INACTIVE) 상태를 관리합니다.
       </div>
     </div>
 
