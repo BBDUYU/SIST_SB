@@ -10,6 +10,13 @@ window.closeRvModal = function() {
     const modal = document.getElementById('rvModal');
     if (modal) modal.style.display = 'none';
 };
+
+function getCsrf() {
+  const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+  const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+  return { token, header };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const $ = (sel) => document.querySelector(sel);
 
@@ -55,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (!res.ok) return;
         const html = await res.text();
-        animateSwap(html, () => {
+        animateSwap(html, async () => {
             const btn = document.querySelector(".panel-recenter");
             if (btn) {
                 const lat = parseFloat(btn.getAttribute("data-lat"));
@@ -64,13 +71,26 @@ document.addEventListener("DOMContentLoaded", () => {
 				initRoadview('roadview', lat, lng);
 				
             }
-			const reviewForm = document.getElementById('reviewForm');
-	        if (reviewForm && typeof window.initReviewModule === 'function') {
-	            const cid = reviewForm.getAttribute('data-pid');
-	            console.log("상세패널 로드 완료 -> 리뷰 모듈 초기화 시도 (CID:", cid, ")");
-	            window.initReviewModule(cid);
-	        }
+			
+
+			// 상세 하트 상태 유지
+			const hb = document.getElementById("btnHeart");
+			if (hb) {
+			    const cid = Number(hb.dataset.cid);
+			    const r = await fetch("/mypage/wishlist/ids", { credentials: "same-origin" });
+			    const ids = new Set((await r.json()).map(Number));
+
+			    const isOn = ids.has(cid);
+			    hb.classList.toggle("hearted", isOn);
+
+			    const path = hb.querySelector("svg path");
+			    if (path) {
+			        path.setAttribute("fill", isOn ? "#DC2626" : "none");
+			        path.setAttribute("stroke", isOn ? "#DC2626" : "#0F172A");
+			    }
+			}
         });
+
     };
 
 	//로드뷰
@@ -140,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 3) 클릭 이벤트 위임
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", async (e) => {
         // 하트 토글
         const heartBtn = e.target.closest(".heart-btn, #btnHeart.iconBtn");
         if (heartBtn) {
@@ -157,8 +177,72 @@ document.addEventListener("DOMContentLoaded", () => {
                 icon.classList.toggle("bi-heart-fill");
                 icon.style.color = icon.classList.contains("bi-heart-fill") ? "#e11d48" : "";
             }
+			// DB 저장 토글
+			// ✅ 여기부터 수정 (DB 저장 토글)
+			try {
+				const item = heartBtn.closest(".house-item");
+				const cid =
+				  Number(heartBtn.dataset.cid) ||   // 상세페이지 하트
+				  (item ? Number(item.getAttribute("data-key")) : null); // 목록 하트
+			  if (!cid) throw new Error("cid 없음");
+
+			  const { token, header } = getCsrf();
+
+			  const res = await fetch(`/mypage/wishlist/toggle?cid=${cid}`, {
+			    method: "POST",
+			    headers: {
+			      ...(token && header ? { [header]: token } : {}),
+			      "X-Requested-With": "XMLHttpRequest",
+			    },
+			    credentials: "same-origin"
+			  });
+
+			  const json = await res.json();
+
+			  if (json.ok) {
+			    console.log("wishlist 상태:", json.hearted ? "추가됨" : "삭제됨");
+			  } else {
+			    alert("로그인이 필요합니다.");
+			  }
+
+			} catch (err) {
+			  console.error("wishlist toggle error:", err);
+			}
+			
             return;
         }
+		
+		// 위시리스트 삭제 버튼 (.btn-icon.btn-remove)
+		const removeBtn = e.target.closest(".btn-icon.btn-remove");
+		if (removeBtn) {
+		  e.preventDefault();
+
+		  const wid = removeBtn.dataset.id; // 버튼에 data-id 필요
+		  if (!wid) {
+		    console.error("wishlist id 없음 (data-id 확인)");
+		    return;
+		  }
+
+		  const { token, header } = getCsrf();
+
+		  const res = await fetch(`/mypage/wishlist/remove?id=${wid}`, {
+		    method: "POST",
+		    headers: {
+		      ...(token && header ? { [header]: token } : {}),
+		      "X-Requested-With": "XMLHttpRequest",
+		    },
+		    credentials: "same-origin",
+		  });
+
+		  if (!res.ok) {
+		    console.error("wishlist remove failed:", res.status);
+		    return;
+		  }
+
+		  // 화면에서 카드 제거 (위시리스트 페이지 카드 wrapper 클래스에 맞춰 조정)
+		  removeBtn.closest(".wishlist-card")?.remove();
+		  return;
+		}
 
         // 카드 클릭
         const item = e.target.closest(".house-item");
@@ -314,6 +398,9 @@ function initComplexBoundsSync(map) {
 		
         const res = await fetch(url);
         const data = await res.json();
+		
+		const res2 = await fetch("/mypage/wishlist/ids", { credentials: "same-origin" });
+		const wishedIds = new Set((await res2.json()).map(Number));
 
         // 마커 초기화 및 생성
         complexMarkers.forEach(m => m.setMap(null));
@@ -330,26 +417,31 @@ function initComplexBoundsSync(map) {
             const newEl = document.createElement("div"); newEl.id = "complexList";
             body.appendChild(newEl); return newEl;
         })();
-		listEl.innerHTML = data.map(it => `
-		    <div class="card house-card mb-3 house-item" data-key="${it.cid}">
-		        <div class="card-body d-flex gap-3 align-items-center p-2">
-		            <div class="rv-thumb-container" 
+		if (listEl) {
+		    listEl.innerHTML = data.map(it => {
+		        const isWished = wishedIds.has(Number(it.cid));
+		        return `
+		        <div class="card house-card mb-3 house-item" data-key="${it.cid}">
+		            <div class="card-body d-flex gap-3 align-items-center">
+		                <div class="rv-thumb-container" 
 		                 data-lat="${it.latitude}" 
 		                 data-lng="${it.longitude}"
 		                 style="width:90px; height:90px; flex-shrink:0; border-radius:12px; overflow:hidden; background:#f1f5f9; display:flex; align-items:center; justify-content:center;">
 		                <i class="bi bi-geo-alt-fill text-muted opacity-50"></i>
 		            </div>
-		            <div class="flex-grow-1">
-		                <div class="fw-bold" style="font-size:14px;">${it.title}</div>
-		                <div class="small text-muted">${it.address}</div>
+		                <div class="flex-grow-1">
+		                    <div class="fw-semibold">${it.title || ""}</div>
+		                    <div class="small text-muted">${it.address || ""}</div>
+		                </div>
+		                <a href="#" class="heart-btn">
+		                    <i class="bi ${isWished ? "bi-heart-fill" : "bi-heart"}"
+		                       style="${isWished ? "color:#e11d48" : ""}"></i>
+		                </a>
 		            </div>
-				<a href="#" class="heart-btn"><i class="bi bi-heart"></i></a>
-		        </div>
-		    </div>
-		`).join("");
-
-		// 2. 리스트 생성 직후 이 함수를 호출하세요!
-		lazyLoadRoadview();
+		        </div>`;
+		    }).join("");
+			lazyLoadRoadview();
+		}
     };
 
     kakao.maps.event.addListener(map, "idle", () => {
@@ -419,6 +511,28 @@ document.addEventListener("DOMContentLoaded", function () {
             initAdditionalLayers(window.__MAIN_MAP__);
         }
     }, 100);
+	
+	// ✅ /main?cid=123 으로 들어오면 상세 패널 자동 오픈 (+ focus=review면 리뷰 위치로)
+	const params = new URLSearchParams(window.location.search);
+	const cid = params.get("cid");
+	const focus = params.get("focus");
+
+	if (cid && window.openDetail) {
+	  window.openDetail(cid);
+
+	  if (focus === "review") {
+	    // 패널이 들어오고 리뷰 모듈이 붙을 시간 조금 대기
+	    setTimeout(() => {
+	      const reviewEl =
+	        document.getElementById("reviewForm") ||
+	        document.querySelector(".reviewForm") ||
+	        document.querySelector("#reviewList") ||
+	        document.querySelector(".reviewList");
+
+	      reviewEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+	    }, 600);
+	  }
+	}
 });
 
 function initAdditionalLayers(map) {
@@ -745,3 +859,13 @@ function updateInfraUI(id, count, threshold) {
     }
 }
 
+// ✅ 마이페이지 리뷰 카드 클릭 -> 해당 매물 상세 + 리뷰 위치로 이동
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".review-card");
+  if (!card) return;
+
+  const cid = card.dataset.cid;
+  if (!cid) return;
+
+  location.href = `/main?cid=${cid}&focus=review`;
+});

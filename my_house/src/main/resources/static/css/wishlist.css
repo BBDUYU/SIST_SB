@@ -110,12 +110,15 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  padding-bottom: 50px;
   gap: 12px;
 }
 
 .wishlist-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
 }
 
@@ -239,4 +242,13 @@
   .wishlist-card { flex-direction: column; }
   .wishlist-image { width: 100%; height: 200px; }
   .wishlist-footer { flex-direction: column; align-items: stretch; }
+}
+
+.wishlist-card { position: relative; }
+.card-link { position: absolute; inset: 0; z-index: 1; }
+.btn-remove { position: relative; z-index: 2; }
+
+html, body {
+  height: auto !important;
+  overflow-y: auto !important;
 }
