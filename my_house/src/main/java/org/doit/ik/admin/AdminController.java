@@ -44,11 +44,5 @@ public class AdminController {
         return "admin/register"; 
     }
     
-    @GetMapping("/admin/reviews")
-    public String reviews(Model model, Principal principal) {
-        model.addAttribute("isLogin", principal != null);
-        return "admin/reviews";
-    }
-
 
 }

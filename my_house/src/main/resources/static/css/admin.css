@@ -113,3 +113,5 @@
   border-radius: 10px;
   font-weight: 800;
 }
+
+html, body { height: auto; overflow-y: auto; }
