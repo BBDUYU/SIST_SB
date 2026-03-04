@@ -36,7 +36,7 @@ public class SecurityConfig {
         p.setPasswordEncoder(passwordEncoder);
         return p;
     }
-
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
             DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
@@ -49,6 +49,7 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/"),
                     new AntPathRequestMatcher("/main"),
                     new AntPathRequestMatcher("/error"),
+                    new AntPathRequestMatcher("/mypage/**"),                    
                     new AntPathRequestMatcher("/user/login"),
                     new AntPathRequestMatcher("/user/signup"),
                     new AntPathRequestMatcher("/user/find-id**"),
@@ -61,6 +62,8 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/images/**"),
                     new AntPathRequestMatcher("/oauth2/**"),
                     new AntPathRequestMatcher("/login/**"),
+                    new AntPathRequestMatcher("/api/**"),                    
+                    new AntPathRequestMatcher("/listing/**"),                    
                     new AntPathRequestMatcher("/h2-console/**")
                 ).permitAll()
 
@@ -120,7 +123,8 @@ public class SecurityConfig {
                 new AntPathRequestMatcher("/api/auth/**"),
                 new AntPathRequestMatcher("/h2-console/**"),
                 // 번호 인증 API (fetch 통신 시 토스트/헤더 처리가 번거로우면 여기에 추가)
-                new AntPathRequestMatcher("/user/api/**") 
+                new AntPathRequestMatcher("/user/api/**"),
+                new AntPathRequestMatcher("/api/**")
             )
         );
 

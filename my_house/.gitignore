@@ -11,3 +11,6 @@ src/main/resources/application-*.yml
 .env
 
 bin/
+
+.gradle/
+build/
