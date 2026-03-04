@@ -111,7 +111,8 @@ public class SecurityConfig {
                 new AntPathRequestMatcher("/api/auth/**"),
                 new AntPathRequestMatcher("/h2-console/**"),
                 // 번호 인증 API (fetch 통신 시 토스트/헤더 처리가 번거로우면 여기에 추가)
-                new AntPathRequestMatcher("/user/api/**") 
+                new AntPathRequestMatcher("/user/api/**"),
+                new AntPathRequestMatcher("/api/**")
             )
         );
 

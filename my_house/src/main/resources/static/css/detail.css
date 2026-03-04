@@ -303,37 +303,42 @@
 }
 
 /* ===== Review ===== */
-.reviewSummary{
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:12px;
+.reviewSummary {
+  display: flex;
+  align-items: center; /* 하단 정렬(flex-end)보다 중앙 정렬이 한 줄일 때 더 깔끔합니다 */
+  justify-content: flex-start; /* 왼쪽부터 차례대로 배치 */
+  gap: 12px;
+  margin-bottom: 15px;
+  padding: 4px 0;
+  flex-wrap: nowrap; /* 절대 줄바꿈 되지 않도록 설정 */
 }
 
-.avg{
-  display:flex;
-  align-items:center;
-  gap:10px;
+.avg {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 요소 사이 간격 살짝 축소 */
+  flex-shrink: 0; /* 공간이 부족해도 찌그러지지 않음 */
 }
 
-.avgScore{
-  font-size: 1.8rem;
+.avgScore {
+  font-size: 1.6rem; /* 크기를 살짝 조절하여 공간 확보 */
   font-weight: 900;
   color: var(--text);
+  line-height: 1;
 }
-
-.avgStars{
-  font-size: 1.1rem;
-  letter-spacing: 2px;
+.avgStars {
+  font-size: 1rem;
+  letter-spacing: 1px;
   color: #f59e0b;
+  line-height: 1;
 }
 
-.avgCount{
-  font-weight: 800;
+.avgCount {
+  font-size: 13px;
+  font-weight: 700;
   color: var(--muted);
+  white-space: nowrap; /* "3개 리뷰"가 짤리지 않게 */
 }
-
 .reviewForm{
   background: #fff;
   border: 1px solid rgba(15,23,42,.08);
@@ -430,4 +435,11 @@
 .reviewEmpty{
   margin-top: 12px;
   color: var(--muted);
+}
+.hint.muted {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto; /* 설명 문구를 오른쪽 끝으로 밀어냄 */
+  white-space: nowrap;
+  letter-spacing: -0.5px;
 }

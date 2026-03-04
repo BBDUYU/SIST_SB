@@ -62,7 +62,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const lng = parseFloat(btn.getAttribute("data-lng"));
                 updateInfraStats(lat, lng);
 				initRoadview('roadview', lat, lng);
-				
+				if (window.initReviewModule) {
+	                window.initReviewModule(propertyKey);
+	                console.log("리뷰 모듈 호출 성공: " + propertyKey);
+	            } else {
+	                console.error("initReviewModule 함수를 찾을 수 없습니다.");
+	            }
             }
         });
     };
