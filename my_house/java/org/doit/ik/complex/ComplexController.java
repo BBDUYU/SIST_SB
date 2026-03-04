@@ -31,6 +31,7 @@ public class ComplexController {
     
         // 2. 기본 정보 매핑
         Map<String, Object> propertyDto = new HashMap<>();
+        propertyDto.put("cid", cid);
         propertyDto.put("name", complex.getTitle());
         propertyDto.put("address", complex.getAddress());
         propertyDto.put("type", formatType(complex.getType()));
