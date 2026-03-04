@@ -16,20 +16,19 @@ import lombok.Setter;
 @Table(name = "lh_notice")
 public class LhNotice {
     @Id
-    private String panId;          // PAN_ID (공고 ID를 PK로 사용)
+    private String panId;          // PAN_ID
 
-    private String panNm;          // 공고명 (PAN_NM)
-    private String aisTpCdNm;      // 공고세부유형 (행복주택 등)
-    private String panSs;          // 공고상태 (공고중 등)
-    private String dtlUrl;         // 상세 URL (DTL_URL)
-    private String clsgDt;         // 마감일자 (CLSG_DT)
+    private String panNm;          // 공고명
+    private String aisTpCdNm;      // 공고세부유형
+    private String panSs;          // 공고상태 (공고중만 수집)
+    private String dtlUrl;         // 상세 URL
+    private String clsgDt;         // 마감일자
 
-    // 상세 정보(dsSbd)에서 가져올 주소
-    private String fullAddress;    // LCT_ARA_ADR + LCT_ARA_DTL_ADR 합친 주소
+    @Column(length = 500)
+    private String fullAddress;    // 정제된 주소
     
-    // 매칭을 위한 좌표
-    private Double latitude;
-    private Double longitude;
+    private Double latitude;       // 위도
+    private Double longitude;      // 경도
 
     private LocalDateTime updatedAt; // 수집 일시
 }

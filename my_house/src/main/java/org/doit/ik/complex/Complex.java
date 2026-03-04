@@ -18,10 +18,16 @@ public class Complex {
     private Long cid;
     private String title;
     private String address;
+    private String fullName;
     private Double latitude;
     private Double longitude;
     private String type;
     @Column(columnDefinition = "TEXT")
     private String description;
     private LocalDateTime createdAt;
+    
+    public void updateFullName() {
+        this.fullName = (this.address != null ? this.address : "") + " " + 
+                        (this.title != null ? this.title : "");
+    }
 }

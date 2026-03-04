@@ -1,27 +1,74 @@
 @charset "UTF-8";
 
+/* =========================
+   TOKENS
+   ========================= */
 :root{
   --brand:#1E3A8A;
   --bg:#F9F8FF;
 }
 
-body{ background:var(--bg); }
+/* =========================
+   GLOBAL / SCROLL POLICY
+   - 전체 페이지 스크롤 X
+   - 좌측 패널만 스크롤
+   ========================= */
+html, body{
+  height:100%;
+  overflow:hidden;
+}
 
-/* ================= HEADER ================= */
+body{
+  margin:0;
+  background:var(--bg);
+}
+
+/* =========================
+   HEADER
+   ========================= */
 .main-navbar{
   background:var(--brand);
   height:60px;
 }
 .nav-gap{ gap:24px; }
 
-/* ================= LAYOUT ================= */
-.app-main{ height:calc(100vh - 60px); }
-
-.list-panel{
-  background:#f3f4f6;
-  border-right:1px solid #e5e7eb;
+/* =========================
+   APP LAYOUT
+   ========================= */
+.app-main{
+  height:calc(100vh - 60px);
+  overflow:hidden;
 }
 
+/* LEFT PANEL (공통) */
+.list-panel{
+  height:100%;
+  background:#f3f4f6;
+  border-right:1px solid #e5e7eb;
+  overflow:hidden; /* 바깥은 숨기고 내부에서만 스크롤 */
+}
+
+/* ✅ 패널 내부를 "헤더(필터바/상단바) + 본문(스크롤)" 구조로 통일 */
+.panel-shell{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* 상단 고정 영역(필터바 or 패널탑) */
+.panel-head{
+  flex:0 0 auto;
+}
+
+/* 본문 스크롤 영역 */
+.panel-body{
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:12px;
+}
+
+/* main의 필터바 */
 .filter-bar{
   height:56px;
   padding:10px;
@@ -29,13 +76,9 @@ body{ background:var(--bg); }
   border-bottom:1px solid #e5e7eb;
 }
 
-.list-scroll{
-  height:calc(100% - 56px);
-  overflow-y:auto;
-  padding:12px;
-}
-
-/* ================= HOUSE CARD ================= */
+/* =========================
+   HOUSE CARD
+   ========================= */
 .house-card{
   cursor:pointer;
   border:1px solid rgba(0,0,0,0.08);
@@ -43,13 +86,11 @@ body{ background:var(--bg); }
   box-shadow:0 1px 8px rgba(0,0,0,.06);
   transition:transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }
-
 .house-card:hover{
   transform:translateY(-2px);
   box-shadow:0 10px 24px rgba(0,0,0,0.12);
   border-color:rgba(30,58,138,0.25);
 }
-
 .house-card:active{
   transform:translateY(0);
   box-shadow:0 6px 14px rgba(0,0,0,0.10);
@@ -58,11 +99,17 @@ body{ background:var(--bg); }
 .thumb{
   width:90px;
   height:70px;
-  background:#e5e7eb;
   border-radius:10px;
   transition:transform 200ms ease, filter 200ms ease;
+  
+  overflow: hidden;
 }
-
+.thumb-img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .house-card:hover .thumb{
   transform:scale(1.03);
   filter:brightness(1.03);
@@ -77,22 +124,26 @@ body{ background:var(--bg); }
   opacity:.9;
 }
 
-/* ================= MAP ================= */
+/* =========================
+   MAP (RIGHT)
+   ========================= */
 .map-wrap{
   position:relative;
+  height:100%;
   background:#e5e7eb;
-  overflow:visible;
+  overflow:hidden;
 }
 
-/* 지도 컨테이너 */
 .map-container{
   width:100%;
   height:100%;
   position:relative;
-  z-index:1; /* 지도는 아래 */
+  z-index:1;
 }
 
-/* ================= FAB (지도 위 버튼) ================= */
+/* =========================
+   FAB (지도 위 버튼)
+   ========================= */
 .fab-stack{
   position:absolute;
   right:16px;
@@ -100,10 +151,10 @@ body{ background:var(--bg); }
   display:flex;
   flex-direction:column;
   gap:10px;
-  z-index:9999; /* 무조건 지도 위 */
-  pointer-events:none; /* 지도 조작 방해 X */
+  z-index:9999;
+  pointer-events:none;
 }
-.fab-stack .fab{ pointer-events:auto; } /* 버튼만 클릭 */
+.fab-stack .fab{ pointer-events:auto; }
 
 .fab{
   width:50px;
@@ -112,11 +163,10 @@ body{ background:var(--bg); }
   display:grid;
   place-items:center;
   box-shadow:0 8px 18px rgba(0,0,0,.12);
-  opacity:.6; /* 기본 반투명 */
+  opacity:.6;
   transition:opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
-/* bootstrap btn-light가 회색이라 완전 흰색으로 고정 */
 .fab.btn-light{
   background:#fff !important;
   border-color:rgba(0,0,0,0.08) !important;
@@ -131,11 +181,30 @@ body{ background:var(--bg); }
   transform:translateY(-2px);
   box-shadow:0 10px 24px rgba(0,0,0,.18);
 }
-.fab:active{
-  transform:translateY(0);
+.fab:active{ transform:translateY(0); }
+
+.fab i{
+  font-size:20px;
+  line-height:1;
 }
 
-/* ================= LOGIN BUTTON ================= */
+.fab-noti{ position:relative; }
+.fab-noti .noti-dot{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:10px;
+  height:10px;
+  background:#ef4444;
+  border-radius:999px;
+  box-shadow:0 0 0 2px #fff;
+  display:none;
+}
+.fab-noti.has-noti .noti-dot{ display:block; }
+
+/* =========================
+   LOGIN BUTTON
+   ========================= */
 .btn-login-pill{
   background:#fff;
   color:var(--brand);
@@ -156,42 +225,129 @@ body{ background:var(--bg); }
   outline-offset:2px;
 }
 
-/* FAB 아이콘 크기 */
-.fab i{
-  font-size: 20px;
-  line-height: 1;
+/* =========================
+   PANEL TRANSITION (list <-> detail)
+   ========================= */
+#panelContent{ height:100%; }
+
+.panel-anim{
+  transition:transform 220ms ease, opacity 180ms ease;
+  will-change:transform, opacity;
+}
+.panel-leave{
+  transform:translateX(-16px);
+  opacity:0;
+}
+.panel-enter{
+  transform:translateX(16px);
+  opacity:0;
 }
 
-/* 알림 점(빨간 뱃지) */
-.fab-noti{
-  position: relative;
+/* detail 패널 상단 X (sticky 느낌) */
+.detail-panel-top{
+  display:flex;
+  justify-content:flex-end;
+  padding:10px 12px 10px 12px;
+  border-bottom:1px solid rgba(0,0,0,0.06);
+  background:#F6F8FB; /* 흰띠 방지 */
 }
 
-.fab-noti .noti-dot{
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 10px;
-  height: 10px;
-  background: #ef4444;   /* 빨강 */
-  border-radius: 999px;
-  box-shadow: 0 0 0 2px #fff; /* 흰 테두리(버튼 위에서 또렷) */
+/* detail 패널 카드 */
+.detail-panel-card{
+  border-radius:14px;
+  overflow:hidden;
 }
 
-.fab-noti .noti-dot{ display:none; }
-.fab-noti.has-noti .noti-dot{ display:block; }
-
-/* ================= ACCESSIBILITY ================= */
+/* =========================
+   ACCESSIBILITY
+   ========================= */
 @media (prefers-reduced-motion: reduce){
   .house-card,
   .thumb,
   .heart-btn,
-  .fab{
+  .fab,
+  .panel-anim{
     transition:none !important;
   }
 }
 
 
-html {
-  overflow-y: scroll;
+/* 점수 */
+/* 툴팁 컨테이너 */
+.info-tooltip-wrap {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  margin-left: 4px;
+  color: #94a3b8; /* 흐린 회색 */
+  vertical-align: middle;
+}
+
+/* 툴팁 말풍선 기본 상태 (숨김) */
+.info-tooltip-content {
+  visibility: hidden;
+  width: 220px;
+  background-color: #334155; /* 진한 남색/회색 */
+  color: #fff;
+  text-align: left;
+  border-radius: 8px;
+  padding: 12px;
+  position: absolute;
+  z-index: 100;
+  bottom: 125%; /* 아이콘 위로 띄움 */
+  left: 0; 
+  transform: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* 말풍선 화살표 */
+.info-tooltip-content::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #334155 transparent transparent transparent;
+}
+
+/* 호버 시 노출 */
+.info-tooltip-wrap:hover .info-tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 내부 리스트 스타일 */
+.info-tooltip-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+.info-tooltip-content li { margin-bottom: 4px; }
+.tooltip-title { font-weight: bold; color: #f1f5f9; border-bottom: 1px solid #475569; padding-bottom: 4px; }
+.tooltip-note { color: #cbd5e1; font-size: 0.7rem; margin-top: 8px; font-style: italic; }
+
+/* 위치이동 핀 표시 */
+@keyframes marker-focus {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.focus-ring {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(30, 58, 138, 0.4); /* 메인 브랜드 색상 계열 */
+  border: 2px solid #1E3A8A;
+  border-radius: 50%;
+  position: absolute;
+  margin-top: -45px; /* 마커 위치에 맞게 조정 (핀 높이만큼) */
+  margin-left: -20px;
+  animation: marker-focus 1s ease-out infinite;
+  pointer-events: none; /* 클릭 방해 금지 */
+  z-index: -1;
 }
