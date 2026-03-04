@@ -1,6 +1,12 @@
 // /static/js/detail-review.js
 
 (function() {
+	
+	function getCsrf() {
+	        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+	        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+	        return { token, header };
+	    }
     // 1. 리뷰 목록 로드 함수 (내부 전용)
     async function loadReviews(cid) {
         const list = document.getElementById('reviewList');
@@ -72,40 +78,44 @@
 	        };
 	    });
 
-	    // 2. 폼 제출 로직 (onsubmit 대신 addEventListener 권장)
-	    reviewForm.onsubmit = async (e) => {
-	        e.preventDefault();
-	        console.log("리뷰 제출 시도...");
+		reviewForm.onsubmit = async (e) => {
+		            e.preventDefault();
+		            const content = document.getElementById('reviewInput').value;
+		            const rating = ratingInput.value;
 
-	        const content = document.getElementById('reviewInput').value;
-	        const rating = ratingInput.value;
+		            if (!rating || rating === "0") {
+		                alert("별점을 선택해주세요!");
+		                return;
+		            }
 
-	        try {
-	            const res = await fetch(`/api/reviews/${cid}`, {
-	                method: 'POST',
-	                headers: { 'Content-Type': 'application/json' },
-	                body: JSON.stringify({ rating, content })
-	            });
+		            const { token, header } = getCsrf(); // ✅ CSRF 토큰 가져오기
 
-	            console.log("서버 응답 상태:", res.status);
+		            try {
+		                const res = await fetch(`/api/reviews/${cid}`, {
+		                    method: 'POST',
+		                    headers: { 
+		                        'Content-Type': 'application/json',
+		                        ...(token && header ? { [header]: token } : {}) // ✅ 헤더에 추가
+		                    },
+		                    body: JSON.stringify({ rating: parseInt(rating), content })
+		                });
 
-				if (res.ok) {
-				    alert('리뷰가 등록되었습니다!');
-				    reviewInput.value = '';
-				    await loadReviews(cid);
-				} else if (res.status === 409) {
-				    // ✅ 중복 작성 시 처리
-				    alert('이미 리뷰를 작성한 매물입니다. 한 매물당 하나의 리뷰만 작성 가능합니다.');
-				} else if (res.status === 401 || res.status === 403) {
-				    alert('로그인이 필요한 서비스입니다.');
-				} else {
-				    alert('에러 발생: ' + res.status);
-				}
-	        } catch (err) {
-	            console.error("Fetch 에러:", err);
-	            alert("서버와 통신할 수 없습니다.");
-	        }
-	    };
+		                if (res.ok) {
+		                    alert('리뷰가 등록되었습니다!');
+		                    document.getElementById('reviewInput').value = '';
+		                    // 초기화
+		                    ratingInput.value = "0";
+		                    starBtns.forEach(b => b.style.color = '#cbd5e1');
+		                    await loadReviews(cid);
+		                } else if (res.status === 409) {
+		                    alert('이미 리뷰를 작성한 매물입니다.');
+		                } else {
+		                    alert('로그인이 필요하거나 권한이 없습니다.');
+		                }
+		            } catch (err) {
+		                console.error("Fetch 에러:", err);
+		            }
+		        };
 
 	    // 3. 목록 로드 호출
 	    loadReviews(cid);
