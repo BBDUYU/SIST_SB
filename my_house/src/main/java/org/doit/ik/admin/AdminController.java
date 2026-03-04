@@ -9,12 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class AdminController {
 
-  @GetMapping("/admin")
-  public String adminHome(Model model, Principal principal) {
-    model.addAttribute("isLogin", principal != null);
-    return "admin/dashboard";
-  }
-
   @GetMapping("/admin/members")
   public String members(Model model, Principal principal) {
     model.addAttribute("isLogin", principal != null);
@@ -29,10 +23,4 @@ public class AdminController {
     return "admin/reviews";
   }
 
-  @GetMapping("/admin/qna")
-  public String qna(Model model, Principal principal) {
-    model.addAttribute("isLogin", principal != null);
-    // TODO: qna 데이터 model.addAttribute("questions", ...)
-    return "admin/qna";
-  }
 }

@@ -64,6 +64,12 @@ document.addEventListener("DOMContentLoaded", () => {
 				initRoadview('roadview', lat, lng);
 				
             }
+			const reviewForm = document.getElementById('reviewForm');
+	        if (reviewForm && typeof window.initReviewModule === 'function') {
+	            const cid = reviewForm.getAttribute('data-pid');
+	            console.log("상세패널 로드 완료 -> 리뷰 모듈 초기화 시도 (CID:", cid, ")");
+	            window.initReviewModule(cid);
+	        }
         });
     };
 
