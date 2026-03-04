@@ -17,24 +17,27 @@
       </a>
     </div>
 
-    <form class="board-form-card" action="#" method="post">
+    <form class="board-form-card"
+      method="post"
+      th:action="${formMode == 'write'} ? @{/board/write} : @{/board/{postId}/edit(postId=${postId})}"
+      th:object="${dto}">
       <div class="mb-3">
         <label for="category" class="form-label">카테고리</label>
-        <select id="category" name="category" class="form-select">
-          <option value="notice" th:selected="${post.category == 'notice'}">공지사항</option>
-          <option value="free" th:selected="${post.category == 'free'}">자유게시판</option>
-          <option value="qna" th:selected="${post.category == 'qna'}">Q&A</option>
+        <select id="category" th:field="*{category}" class="form-select">
+          <option value="notice">공지사항</option>
+		  <option value="free">자유게시판</option>
+		  <option value="qna">Q&A</option>
         </select>
       </div>
 
       <div class="mb-3">
         <label for="title" class="form-label">제목</label>
-        <input id="title" name="title" type="text" class="form-control" maxlength="120" th:value="${post.title}" placeholder="제목을 입력해주세요.">
+        <input id="title" type="text" class="form-control" maxlength="120" th:field="*{title}">
       </div>
 
       <div class="mb-4">
         <label for="content" class="form-label">내용</label>
-        <textarea id="content" name="content" class="form-control board-editor" rows="10" placeholder="내용을 입력해주세요." th:text="${post.content}"></textarea>
+        <textarea id="content" class="form-control board-editor" rows="10" th:field="*{content}"></textarea>
       </div>
 
       <div class="board-form-actions">

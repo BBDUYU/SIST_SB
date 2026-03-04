@@ -44,7 +44,10 @@ public class SecurityConfig {
                    // (선택) 비밀번호찾기도 같은 규칙이면 같이
                    // new AntPathRequestMatcher("/user/pw-**"),
 
+                   // 관리자 페이지
+                   new AntPathRequestMatcher("/admin/**"),
                    // static resources
+                   
                    new AntPathRequestMatcher("/css/**"),
                    new AntPathRequestMatcher("/js/**"),
                    new AntPathRequestMatcher("/image/**"),
@@ -63,6 +66,8 @@ public class SecurityConfig {
                    
                    // dev
                    new AntPathRequestMatcher("/h2-console/**")
+                   
+                   
                    
                ).permitAll()
                .anyRequest().authenticated()

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: html(~{::section}, '회원관리')">
+
+<section class="admin-page py-4">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <div class="container admin-shell">
+
+    <div class="admin-hero">
+      <div>
+        <h1 class="admin-title">회원관리</h1>
+        <p class="admin-subtitle mb-0">상태 변경/정지/권한 부여를 관리합니다.</p>
+      </div>
+      <a class="btn btn-light fw-bold" th:href="@{/admin}">대시보드</a>
+    </div>
+
+    <nav class="admin-nav">
+      <a th:href="@{/admin}">대시보드</a>
+      <a th:href="@{/admin/members}" class="active">회원관리</a>
+      <a th:href="@{/admin/reviews}">리뷰상태관리</a>
+      <a th:href="@{/admin/qna}">질문/답변</a>
+    </nav>
+
+    <div class="admin-card">
+      <div class="admin-toolbar">
+        <div class="admin-search">
+          <input class="form-control" data-admin-search
+                 placeholder="닉네임/이메일 검색 (Enter)">
+        </div>
+
+        <div class="d-flex gap-2 admin-actions">
+          <button class="btn btn-outline-secondary btn-sm" type="button">CSV 내보내기</button>
+          <button class="btn btn-primary btn-sm" type="button">새 관리자 등록</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+          <thead>
+          <tr>
+            <th style="width:14%;">권한</th>
+            <th>닉네임</th>
+            <th>이메일</th>
+            <th style="width:14%;">상태</th>
+            <th style="width:18%;">관리</th>
+          </tr>
+          </thead>
+          <tbody>
+          <!-- TODO: th:each="m : ${members}" 로 교체 -->
+          <tr>
+            <td><span class="badge-pill badge-ok">USER</span></td>
+            <td>게스트</td>
+            <td>guest@myhouse.local</td>
+            <td><span class="badge-pill badge-ok">ACTIVE</span></td>
+            <td class="admin-actions">
+              <button class="btn btn-outline-primary btn-sm" type="button">권한</button>
+              <button class="btn btn-outline-danger btn-sm" type="button">정지</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script th:src="@{/js/admin.js}"></script>
+</section>
+</html>

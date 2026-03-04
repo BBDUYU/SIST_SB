@@ -7,46 +7,87 @@
   <link rel="stylesheet" th:href="@{/css/board-detail.css}">
 
   <div class="container board-container">
+
     <div class="detail-card">
       <div class="detail-top">
-        <span class="board-category-chip" th:text="${post.category}">자유게시판</span>
+        <span class="board-category-chip"
+              th:text="${post.subCategory.scName}">자유게시판</span>
+
         <div class="detail-actions">
           <a class="btn btn-outline-secondary btn-sm" th:href="@{/board}">목록</a>
-          <a class="btn btn-outline-primary btn-sm" th:href="@{/board/{postId}/edit(postId=${post.id})}">수정</a>
+          <a class="btn btn-outline-primary btn-sm"
+             th:href="@{/board/{postId}/edit(postId=${post.boardId})}">수정</a>
         </div>
       </div>
 
       <h2 class="detail-title" th:text="${post.title}">게시글 제목</h2>
 
       <div class="detail-meta">
-        <span><i class="bi bi-person me-1"></i><strong th:text="${post.author}">작성자</strong></span>
-        <span><i class="bi bi-eye me-1"></i>조회수 <strong th:text="${post.views}">0</strong></span>
-        <span><i class="bi bi-calendar3 me-1"></i><strong th:text="${post.date}">2026-01-01</strong></span>
+        <span>
+          <i class="bi bi-person me-1"></i>
+          <strong th:text="${post.user.nickname}">작성자</strong>
+        </span>
+        <span>
+          <i class="bi bi-calendar3 me-1"></i>
+          <strong th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">
+            2026-01-01
+          </strong>
+        </span>
       </div>
 
-      <article class="detail-content" th:text="${post.content}">
+      <article class="detail-content"
+               th:text="${post.content}">
         게시글 내용
       </article>
     </div>
-    
-    <!-- 댓글 섹션 -->
-	<section class="comment-card" id="commentCard">
-	  <div class="comment-head">
-	    <h3 class="comment-title">댓글</h3>
-	    <span class="comment-count" id="commentCount">0</span>
-	  </div>
-	
-	  <form class="comment-form" id="commentForm">
-	    <input class="comment-input" id="commentInput" maxlength="200"
-	           placeholder="댓글을 입력하세요 (최대 200자)" required />
-	    <button class="comment-submit" type="submit">등록</button>
-	  </form>
-	
-	  <ul class="comment-list" id="commentList"></ul>
-	  <p class="comment-empty" id="commentEmpty">아직 댓글이 없어요.</p>
-	</section>
-	
-	<script defer src="/js/board-comments-dummy.js"></script>
+
+
+    <!--  댓글 영역 -->
+
+    <section class="comment-card mt-4">
+      <div class="comment-head">
+        <h3 class="comment-title">댓글</h3>
+        <span class="comment-count"
+              th:text="${#lists.size(replies)}">0</span>
+      </div>
+
+      <!-- 댓글 목록 -->
+      <div th:if="${#lists.isEmpty(replies)}"
+           class="comment-empty">
+        아직 댓글이 없어요.
+      </div>
+
+      <ul class="comment-list">
+        <li th:each="reply : ${replies}" class="comment-item">
+          <div class="comment-meta">
+            <strong th:text="${reply.user.nickname}">작성자</strong>
+            <span th:text="${#temporals.format(reply.createdAt, 'yyyy-MM-dd HH:mm')}">
+              날짜
+            </span>
+          </div>
+          <div class="comment-content"
+               th:text="${reply.content}">
+            댓글 내용
+          </div>
+        </li>
+      </ul>
+
+      <!-- 댓글 작성 -->
+      <form th:action="@{/board/{postId}/reply(postId=${post.boardId})}"
+            method="post"
+            class="comment-form mt-3">
+
+        <input class="comment-input"
+               name="content"
+               maxlength="200"
+               placeholder="댓글을 입력하세요 (최대 200자)"
+               required />
+
+        <button class="comment-submit" type="submit">등록</button>
+      </form>
+
+    </section>
+
   </div>
 </section>
 </html>

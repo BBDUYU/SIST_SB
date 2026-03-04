@@ -18,14 +18,21 @@
 
     <div class="board-toolbar">
       <div class="board-tabs" role="tablist" aria-label="게시판 카테고리">
-        <button class="board-tab" th:classappend="${selectedCategory == 'notice'} ? ' active'" data-category="notice" type="button">공지사항</button>
-        <button class="board-tab" th:classappend="${selectedCategory == 'free'} ? ' active'" data-category="free" type="button">자유게시판</button>
-        <button class="board-tab" th:classappend="${selectedCategory == 'qna'} ? ' active'" data-category="qna" type="button">Q&A</button>
+        <button class="board-tab" th:classappend="${selectedCategory == 'all'} ? ' active'"
+                th:attr="data-category='all'" type="button">전체</button>
+        <button class="board-tab" th:classappend="${selectedCategory == 'notice'} ? ' active'"
+                th:attr="data-category='notice'" type="button">공지사항</button>
+        <button class="board-tab" th:classappend="${selectedCategory == 'free'} ? ' active'"
+                th:attr="data-category='free'" type="button">자유게시판</button>
+        <button class="board-tab" th:classappend="${selectedCategory == 'qna'} ? ' active'"
+                th:attr="data-category='qna'" type="button">Q&A</button>
       </div>
 
       <div class="board-search-wrap">
         <i class="bi bi-search"></i>
-        <input id="boardSearch" type="search" class="form-control" placeholder="제목 또는 작성자 검색">
+        <input id="boardSearch" type="search" class="form-control"
+               placeholder="제목 또는 내용 검색"
+               th:value="${q}">
       </div>
     </div>
 
@@ -36,33 +43,59 @@
           <th scope="col" style="width: 14%;">카테고리</th>
           <th scope="col">제목</th>
           <th scope="col" style="width: 14%;">작성자</th>
-          <th scope="col" style="width: 10%;">조회수</th>
           <th scope="col" style="width: 14%;">작성일</th>
         </tr>
         </thead>
+
         <tbody id="boardTableBody">
-        <tr th:each="post : ${posts}">
+        <!-- 게시글 없음 -->
+        <tr th:if="${posts == null or #lists.isEmpty(posts.content)}">
+          <td colspan="4" class="text-center py-5 text-muted">게시글이 없습니다.</td>
+        </tr>
+
+        <!-- 게시글 목록 -->
+        <tr th:each="post : ${posts.content}" th:unless="${posts == null}">
           <td>
-            <span class="board-category-chip" th:text="${post.category}">자유게시판</span>
+            <span class="board-category-chip" th:text="${post.subCategory.scName}">자유게시판</span>
           </td>
           <td>
-            <a th:href="@{/board/{postId}(postId=${post.id})}" class="board-post-link" th:text="${post.title}">게시글 제목</a>
+            <a class="board-post-link"
+               th:href="@{/board/{postId}(postId=${post.boardId})}"
+               th:text="${post.title}">게시글 제목</a>
           </td>
-          <td th:text="${post.author}">작성자</td>
-          <td th:text="${post.views}">0</td>
-          <td th:text="${post.date}">2026-01-01</td>
+          <td th:text="${post.user.nickname}">작성자</td>
+          <td th:text="${post.createdAt != null ? #temporals.format(post.createdAt, 'yyyy-MM-dd') : ''}">2026-01-01</td>
         </tr>
         </tbody>
       </table>
     </div>
 
-    <nav class="board-pagination-wrap mt-3" aria-label="게시판 페이지 이동">
+    <!-- 페이징: Page<Board> 기준 -->
+    <nav class="board-pagination-wrap mt-3" aria-label="게시판 페이지 이동"
+         th:if="${posts != null and posts.totalPages > 1}">
       <ul class="pagination justify-content-center mb-0">
-        <li class="page-item disabled"><a class="page-link" href="#">이전</a></li>
-        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-        <li class="page-item"><a class="page-link" href="#">2</a></li>
-        <li class="page-item"><a class="page-link" href="#">3</a></li>
-        <li class="page-item"><a class="page-link" href="#">다음</a></li>
+
+        <!-- 이전 -->
+        <li class="page-item" th:classappend="${posts.first} ? ' disabled'">
+          <a class="page-link"
+             th:href="@{/board(category=${selectedCategory}, q=${q}, page=${posts.number - 1})}">‹</a>
+        </li>
+
+        <!-- 페이지 번호 (현재 페이지 기준 앞뒤 2개) -->
+        <li class="page-item"
+            th:each="p : ${#numbers.sequence(T(java.lang.Math).max(0, posts.number-2), T(java.lang.Math).min(posts.totalPages-1, posts.number+2))}"
+            th:classappend="${p == posts.number} ? ' active'">
+          <a class="page-link"
+             th:href="@{/board(category=${selectedCategory}, q=${q}, page=${p})}"
+             th:text="${p + 1}">1</a>
+        </li>
+
+        <!-- 다음 -->
+        <li class="page-item" th:classappend="${posts.last} ? ' disabled'">
+          <a class="page-link"
+             th:href="@{/board(category=${selectedCategory}, q=${q}, page=${posts.number + 1})}">›</a>
+        </li>
+
       </ul>
     </nav>
   </div>
