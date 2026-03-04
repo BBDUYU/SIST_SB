@@ -19,20 +19,35 @@ body {
   color: var(--text);
 }
 
+
+
+/* signup.css */
+
+/* 1. body와 html에도 스크롤 허용 설정 확인 */
+html, body {
+  height: auto !important; 
+  overflow-y: auto !important;
+}
+
 .page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 56px 16px;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important; /* ✅ center가 아닌 flex-start여야 스크롤이 생깁니다. */
+  min-height: 100vh !important;
+  width: 100% !important;
+  padding: 60px 16px !important;    /* ✅ 상하 여백을 크게 주어 짤림 방지 */
+  background: var(--bg) !important;
+  box-sizing: border-box !important;
 }
 
 .card {
-  width: min(720px, 100%);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 48px 56px;
+  width: min(720px, 100%) !important;
+  background: var(--card) !important;
+  margin: 0 auto !important;        /* ✅ margin: auto 0; 을 절대 쓰지 마세요. */
+  padding: 48px 56px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  margin-bottom: 50px !important;   /* ✅ 하단 여백을 주어 끝까지 보이게 함 */
 }
 
 .title {

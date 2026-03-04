@@ -197,9 +197,17 @@ public class UserController {
 
     @PostMapping("/withdraw")
     public String withdrawSubmit(HttpServletRequest request, HttpServletResponse response) {
+     
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        userService.withdrawCurrentUser(auth);
-        new SecurityContextLogoutHandler().logout(request, response, auth);
+        
+        if (auth != null) {
+         
+            userService.withdrawCurrentUser(auth); 
+
+   
+            new SecurityContextLogoutHandler().logout(request, response, auth);
+        }
+
         return "redirect:/main?withdraw=success";
     }
     

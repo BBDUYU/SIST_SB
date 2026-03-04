@@ -43,7 +43,7 @@
             탈퇴신청
           </button>
 
-          <a th:href="@{/user/mypage}"
+          <a th:href="@{/main}"
              class="primary flex-1 center-flex"
              style="text-decoration: none;">
             취소하기
@@ -53,18 +53,6 @@
     </div>
   </section>
 
-  <script th:inline="javascript">
-    function handleWithdrawSubmit() {
-        const checkbox = document.getElementById('confirmWithdraw');
-        
-        if (!checkbox.checked) {
-            alert("탈퇴 안내 사항을 확인하고 체크박스에 동의해주세요.");
-            return false;
-        }
-
-        // 최종 확인 팝업 (포트폴리오의 세심함을 보여주는 포인트)
-        return confirm("정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 정보는 즉시 삭제되며 복구가 불가능합니다.");
-    }
-  </script>
+<script th:src="@{/js/withdraw.js}"></script>
 </main>
 </html>

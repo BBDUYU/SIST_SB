@@ -104,30 +104,34 @@ public class UserServiceImpl implements UserService {
         return cleanName + "_" + (System.currentTimeMillis() % 1000000);
     }
 
-    /**
-     * [회원 탈퇴 관련 로직]
-     */
+   
     @Override
     @Transactional
-    public void withdrawCurrentUser(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalArgumentException("로그인 상태가 아닙니다.");
+    public void withdrawCurrentUser(Authentication auth) {
+        if (auth == null) {
+            throw new IllegalStateException("인증 정보가 없습니다.");
         }
 
         String email = null;
-        Object principal = authentication.getPrincipal();
 
-        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
-            email = ud.getUsername(); 
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            Object e = oAuth2User.getAttributes().get("email");
-            if (e != null) email = e.toString();
+       
+        if (auth.getPrincipal() instanceof OAuth2User) {
+            OAuth2User oAuth2User = (OAuth2User) auth.getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        } 
+        
+       
+        if (email == null) {
+            email = auth.getName();
         }
 
-        User user = userRepository.findByEmailAndDeletedAtIsNull(email.trim().toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+       
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalStateException("사용자 이메일을 찾을 수 없습니다.");
+        }
 
-        processWithdraw(user);
+        
+        userRepository.deleteByEmail(email.trim());
     }
 
     @Override
