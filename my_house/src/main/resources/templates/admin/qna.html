@@ -15,7 +15,6 @@
     </div>
 
     <nav class="admin-nav">
-      <a th:href="@{/admin}">대시보드</a>
       <a th:href="@{/admin/members}">회원관리</a>
       <a th:href="@{/admin/reviews}">리뷰상태관리</a>
       <a th:href="@{/admin/qna}" class="active">질문/답변</a>
@@ -48,36 +47,40 @@
           </tr>
           </thead>
 
-          <tbody>
-          <!-- TODO: th:each="q : ${questions}" -->
-          <tr>
-            <td><span class="badge-pill badge-warn">UNANSWERED</span></td>
-            <td>
-              <div class="fw-bold">전세/월세 필터는 어디서 바꾸나요?</div>
-              <div class="text-muted" style="font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:560px;">
-                질문 상세 내용 일부가 여기에 표시됩니다…
-              </div>
-            </td>
-            <td>게스트</td>
-            <td>2026-03-03</td>
-            <td class="admin-actions">
-              <button class="btn btn-outline-primary btn-sm" type="button">답변하기</button>
-              <button class="btn btn-outline-secondary btn-sm" type="button">숨김</button>
-            </td>
-          </tr>
-          </tbody>
+		  <tbody>
+		    <tr th:each="q : ${questions}">
+		      <td>
+		        <span th:if="${q.status.name() == 'WAITING'}" class="badge-pill badge-warn">UNANSWERED</span>
+		        <span th:if="${q.status.name() == 'COMPLETED'}" class="badge-pill badge-ok">ANSWERED</span>
+		      </td>
+
+		      <td>
+		        <div class="fw-bold" th:text="${q.title}">질문 제목</div>
+		        <div class="text-muted" 
+		             th:text="${q.content}" 
+		             style="font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:560px;">
+		          질문 상세 내용 일부...
+		        </div>
+		      </td>
+
+		      <td th:text="${q.user != null ? q.user.nickname : '알 수 없음'}">작성자</td>
+
+		      <td th:text="${#temporals.format(q.createdAt, 'yyyy-MM-dd')}">2026-03-03</td>
+
+		      <td class="admin-actions">
+		        <button class="btn btn-outline-primary btn-sm" type="button" 
+		                th:onclick="prepareAnswer([[${q.inquiryId}]], [[${q.title}]])">답변하기</button>
+		      </td>
+		    </tr>
+		  </tbody>
         </table>
       </div>
 
       <!-- 답변 작성 폼(선택: 페이지 하단에 고정 폼) -->
       <hr class="my-4">
-      <div class="fw-bold mb-2">답변 작성(예시 UI)</div>
-      <div class="text-muted mb-2" style="font-size:.9rem;">* 실제로는 “답변하기” 눌렀을 때 선택된 질문 정보를 여기에 바인딩하면 됨.</div>
+      <div class="fw-bold mb-2">답변 작성</div>
 
       <form>
-        <div class="mb-2">
-          <input class="form-control" placeholder="답변 제목(선택)">
-        </div>
         <div class="mb-2">
           <textarea class="form-control" rows="4" placeholder="답변 내용을 입력하세요"></textarea>
         </div>

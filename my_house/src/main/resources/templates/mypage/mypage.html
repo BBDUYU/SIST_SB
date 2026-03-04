@@ -149,7 +149,39 @@
           </div>
         </div>
 
-        <div class="review-list"></div>
+        <div class="review-list">
+
+		  <!-- 리뷰 없을 때 -->
+		  <div th:if="${#lists.isEmpty(reviews)}" class="card review-card">
+		    <p class="muted">작성한 리뷰가 없습니다.</p>
+		  </div>
+		
+		  <!-- 리뷰 목록 -->
+		  <div th:each="r : ${reviews}" class="card review-card">
+		
+		    <div class="review-header">
+		      <div>
+		        <div class="review-property" th:text="${r.propertyName}">단지명</div>
+		
+		        <div class="stars-small">
+		          <span class="star" th:classappend="${r.rating >= 1} ? ' filled' : ''">★</span>
+		          <span class="star" th:classappend="${r.rating >= 2} ? ' filled' : ''">★</span>
+		          <span class="star" th:classappend="${r.rating >= 3} ? ' filled' : ''">★</span>
+		          <span class="star" th:classappend="${r.rating >= 4} ? ' filled' : ''">★</span>
+		          <span class="star" th:classappend="${r.rating >= 5} ? ' filled' : ''">★</span>
+		        </div>
+		      </div>
+		
+		      <div class="review-date" th:text="${r.date}">2026.03.04</div>
+		    </div>
+		
+		    <div class="review-content" th:text="${r.content}">
+		      리뷰 내용
+		    </div>
+		
+		  </div>
+		
+		</div>
       </div>
 
       <!-- 문의 -->

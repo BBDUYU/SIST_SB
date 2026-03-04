@@ -116,11 +116,19 @@ public class MainController {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
 
-        Complex complex = complexRepository.findById(cid)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매물입니다."));
-        
         User user = userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
+
+        // ✅ 중복 리뷰 체크: 해당 사용자가 이 매물에 쓴 활성 리뷰가 있는지 확인
+        boolean exists = reviewRepository.existsByComplex_CidAndUser_UidAndStatus(
+                cid, user.getUid(), Review.ReviewStatus.ACTIVE);
+        
+        if (exists) {
+            return ResponseEntity.status(409).body("이미 해당 매물에 리뷰를 작성하셨습니다.");
+        }
+
+        Complex complex = complexRepository.findById(cid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매물입니다."));
 
         Review review = new Review();
         review.setComplex(complex);
@@ -128,8 +136,7 @@ public class MainController {
         review.setRating(Integer.parseInt(payload.get("rating").toString()));
         review.setContent(payload.get("content").toString());
         review.setCreatedAt(java.time.LocalDateTime.now());
-        
-        review.setStatus(Review.ReviewStatus.ACTIVE); 
+        review.setStatus(Review.ReviewStatus.ACTIVE);
 
         reviewRepository.save(review);
         

@@ -13,10 +13,11 @@ import lombok.Setter;
 @Table(name = "auth_verification")
 public class AuthVerification {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "verification_id")
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "verification_id") // ✅ 실제 DB 컬럼명인 verification_id로 매핑
+	private Long id;
+	
 
     @Column(nullable = true)
     private Long uid;

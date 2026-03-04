@@ -68,16 +68,45 @@
 }
 
 /* 6. 입력창 스타일: 중앙 정렬 및 가독성 확장 */
+/* 1. 입력창과 타이머를 감싸는 부모의 너비를 입력창과 동일하게 맞춤 */
+.input-group {
+  position: relative;
+  width: 100%;             /* ✅ 부모 너비를 카드 너비에 꽉 채움 */
+  max-width: 100%;         /* 부모가 카드 밖으로 나가지 않게 방어 */
+  display: flex;
+  justify-content: center; /* 입력창을 가운데로 정렬 */
+}
+
+/* 2. 입력창 스타일 정리 */
 .input.center-text {
-  width: 100%;
+  width: 100%;             /* ✅ 부모 너비 안에서 100% 사용 (튀어나가지 않게) */
   height: 54px;
-  text-align: center;
+  
+  /* 타이머 공간 확보 (우측 패딩) */
+  padding: 0 70px 0 15px; 
+  
+  text-align: left;        /* 글자가 타이머와 겹치지 않게 왼쪽 정렬 */
+  box-sizing: border-box;  /* 패딩이 너비에 포함되도록 설정 */
+  
   font-size: 18px !important;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #F3F4FF;      /* 기존 인풋 컬러와 통일 */
+  background: #F3F4FF;      
   outline: none;
   transition: all 0.2s;
+}
+
+/* 3. 타이머 위치 고정 */
+.timer {
+  position: absolute;
+  right: 15px;             /* ✅ 입력창 내부 우측 끝에서 15px 띄움 */
+  top: 50%;
+  transform: translateY(-50%); 
+  color: #DC2626;          
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;    /* 타이머 뒤의 인풋 클릭 가능하게 설정 */
+  z-index: 10;             /* 입력창보다 위에 보이도록 설정 */
 }
 
 .input.center-text:focus {
