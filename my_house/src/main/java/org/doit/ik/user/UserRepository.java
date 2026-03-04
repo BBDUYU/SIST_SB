@@ -11,6 +11,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // ✅ 아이디 찾기(휴대폰 등록한 사용자만 조회됨)
     Optional<User> findByPhoneAndDeletedAtIsNull(String phone);
+    
+    void deleteByEmail(String email);
 
     // ✅ 중복 체크
     boolean existsByEmail(String email);

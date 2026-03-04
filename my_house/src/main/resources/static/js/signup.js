@@ -1,4 +1,5 @@
 (() => {
+	if (!window.location.pathname.includes('/user/signup')) return;
     const $ = (sel, root = document) => root.querySelector(sel);
 
     // [요소 선택]
