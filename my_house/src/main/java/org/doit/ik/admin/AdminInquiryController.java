@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminInquiryController {
 
     private final InquiryService inquiryService;
+    
 
  // AdminInquiryController.java 수정
 

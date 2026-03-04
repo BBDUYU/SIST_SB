@@ -45,7 +45,9 @@ public class SecurityConfig {
         http
             .authenticationProvider(daoAuthenticationProvider)
             .authorizeHttpRequests(auth -> auth
+            		.requestMatchers(new AntPathRequestMatcher("/admin/**")).hasRole("ADMIN")
                 .requestMatchers(
+                		
                     // 1. 누구나 접근 가능한 페이지 (Public)
                     new AntPathRequestMatcher("/"),
                     new AntPathRequestMatcher("/main"),

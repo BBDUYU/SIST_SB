@@ -37,6 +37,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (user.getDeletedAt() != null) {
             throw new DisabledException("탈퇴한 사용자입니다.");
         }
+        
+     // 2. ✅ [핵심 추가] Enum 객체 비교가 아닌 '문자열'로 직접 비교하여 강제 차단
+        // 이렇게 하면 Enum 매핑 문제나 영속성 컨텍스트 문제를 피할 수 있습니다.
+        String statusName = String.valueOf(user.getStatus());
+        if ("BANNED".equals(statusName)) {
+            throw new DisabledException("관리자에 의해 정지된 계정입니다.");
+        }
 
         // status 기반 차단 (있다면 유지)
         if (user.getStatus() != null && user.getStatus() != UserStatus.ACTIVE) {
@@ -56,11 +63,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 ? "ROLE_USER"
                 : user.getRole().trim();
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                Collections.singleton(new SimpleGrantedAuthority(role))
-        );
+        return new CustomUserDetails(user);
+        
     }
     
 
