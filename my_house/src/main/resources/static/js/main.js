@@ -130,8 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	        }
 	    });
 
-
-	
     function backToList() {
         animateSwap(listHTML, () => {
             if (window.__MAIN_MAP__) {
@@ -222,11 +220,69 @@ document.addEventListener("DOMContentLoaded", () => {
 		    }
 		}
     });
+	
+	document.addEventListener("change", (e) => {
+	  const id = e.target?.id;
+	  if (id === "filterType" || id === "filterArea" || id === "filterPrice") {
+	    window.__UPDATE_COMPLEX_BY_BOUNDS__?.();
+	  }
+	});
 });
 
 // --- 기능 함수들 (독립 선언) ---
+function pyeongRangeToM2(rangeCode) {
+  if (!rangeCode) return { areaMin: "", areaMax: "" };
+
+  const P = 3.3058;
+  if (rangeCode === "30-") return { areaMin: (30 * P).toFixed(2), areaMax: "" };
+
+  const [minP, maxP] = rangeCode.split("-").map(Number);
+  const areaMin = (minP * P).toFixed(2);
+  const areaMax = (maxP * P).toFixed(2);
+
+  return { areaMin, areaMax };
+}
+
 
 function initComplexBoundsSync(map) {
+	
+	initMainFilterOptions();
+	
+	function initMainFilterOptions() {
+	  const typeSel = document.getElementById("filterType");
+	  const areaSel = document.getElementById("filterArea");
+	  const rentSel = document.getElementById("filterPrice");
+
+	  if (!typeSel || !areaSel || !rentSel) return;
+
+	  // 주거형태
+	  typeSel.innerHTML = `
+	    <option value="">주거형태</option>
+	    <option value="APT">아파트</option>
+	    <option value="SH">주택</option>
+	    <option value="OFFI">오피스텔</option>
+	  `;
+
+	  // 평수(옵션 value는 “구간 코드”로)
+	  areaSel.innerHTML = `
+	    <option value="">평수</option>
+	    <option value="0-5">~5평</option>
+	    <option value="5-10">~10평</option>
+	    <option value="10-15">~15평</option>
+	    <option value="15-20">~20평</option>
+	    <option value="20-25">~25평</option>
+	    <option value="25-30">~30평</option>
+	    <option value="30-">30평 이상</option>
+	  `;
+
+	  // 전/월세
+	  rentSel.innerHTML = `
+	    <option value="">전/월세</option>
+	    <option value="전세">전세</option>
+	    <option value="월세">월세</option>
+	  `;
+	}
+	
     const complexMarkerImage = new kakao.maps.MarkerImage("/image/pin.png", new kakao.maps.Size(48, 48), { offset: new kakao.maps.Point(24, 48) });
     let complexMarkers = [];
     let debounceTimer = null;
@@ -239,7 +295,23 @@ function initComplexBoundsSync(map) {
             return;
         }
         const b = map.getBounds();
-        const url = `/api/complex/in-bounds?swLat=${b.getSouthWest().getLat()}&swLng=${b.getSouthWest().getLng()}&neLat=${b.getNorthEast().getLat()}&neLng=${b.getNorthEast().getLng()}`;
+        // const url = `/api/complex/in-bounds?swLat=${b.getSouthWest().getLat()}&swLng=${b.getSouthWest().getLng()}&neLat=${b.getNorthEast().getLat()}&neLng=${b.getNorthEast().getLng()}`;
+		// 필터 값 읽기
+		const type = document.getElementById("filterType")?.value || "";
+		const rentType = document.getElementById("filterPrice")?.value || "";
+		const areaCode = document.getElementById("filterArea")?.value || "";
+		const { areaMin, areaMax } = pyeongRangeToM2(areaCode);
+
+		// 필터 포함 URL
+		const url =
+		  `/api/complex/in-bounds?swLat=${b.getSouthWest().getLat()}&swLng=${b.getSouthWest().getLng()}` +
+		  `&neLat=${b.getNorthEast().getLat()}&neLng=${b.getNorthEast().getLng()}` +
+		  `&type=${encodeURIComponent(type)}` +
+		  `&rentType=${encodeURIComponent(rentType)}` +
+		  `&areaMin=${encodeURIComponent(areaMin)}` +
+		  `&areaMax=${encodeURIComponent(areaMax)}`;
+	    
+		
         const res = await fetch(url);
         const data = await res.json();
 
@@ -285,6 +357,14 @@ function initComplexBoundsSync(map) {
         debounceTimer = setTimeout(update, 200);
     });
     window.__UPDATE_COMPLEX_BY_BOUNDS__ = update;
+	
+	// ["filterType","filterArea","filterPrice"].forEach(id => {
+	//  const el = document.getElementById(id);
+	//  if (!el) return;
+	//  el.addEventListener("change", () => window.__UPDATE_COMPLEX_BY_BOUNDS__?.());
+	// });
+	
+	
     update();
 }
 
@@ -496,7 +576,7 @@ function drawSafePolyline(path, map) {
 function updateCctvMarkers(map) {
     const b = map.getBounds();
     const url = `/api/cctv?minLat=${b.getSouthWest().getLat()}&maxLat=${b.getNorthEast().getLat()}&minLng=${b.getSouthWest().getLng()}&maxLng=${b.getNorthEast().getLng()}`;
-    
+	
     fetch(url)
         .then(res => res.json())
         .then(data => {
@@ -585,17 +665,17 @@ function applyFilter(type, show) {
 	}
 }
 
-async function updateInfraStats(lat, lng) {
-    const ps = new kakao.maps.services.Places();
-    const getCount = (code, radius) => new Promise(res => {
-        ps.categorySearch(code, (data, status, pagination) => res(status === kakao.maps.services.Status.OK ? pagination.totalCount : 0), { location: new kakao.maps.LatLng(lat, lng), radius });
-    });
-    const [s, c, h, m] = await Promise.all([getCount('PK6', 1000), getCount('CS2', 300), getCount('HP8', 1000), getCount('MT1', 1000)]);
-    if(document.getElementById('subway-count')) document.getElementById('subway-count').innerText = s;
-    if(document.getElementById('cvs-count')) document.getElementById('cvs-count').innerText = c;
-    if(document.getElementById('hospital-count')) document.getElementById('hospital-count').innerText = h;
-    if(document.getElementById('mart-count')) document.getElementById('mart-count').innerText = m;
-}
+// async function updateInfraStats(lat, lng) {
+//     const ps = new kakao.maps.services.Places();
+//     const getCount = (code, radius) => new Promise(res => {
+//         ps.categorySearch(code, (data, status, pagination) => res(status === kakao.maps.services.Status.OK ? pagination.totalCount : 0), { location: new kakao.maps.LatLng(lat, lng), radius });
+//     });
+//     const [s, c, h, m] = await Promise.all([getCount('PK6', 1000), getCount('CS2', 300), getCount('HP8', 1000), getCount('MT1', 1000)]);
+//     if(document.getElementById('subway-count')) document.getElementById('subway-count').innerText = s;
+//     if(document.getElementById('cvs-count')) document.getElementById('cvs-count').innerText = c;
+//     if(document.getElementById('hospital-count')) document.getElementById('hospital-count').innerText = h;
+//     if(document.getElementById('mart-count')) document.getElementById('mart-count').innerText = m;
+// }
 
 // 인프라
 async function updateInfraStats(lat, lng) {

@@ -18,10 +18,14 @@ public class ComplexApiController {
         @RequestParam("swLat") Double swLat,
         @RequestParam("swLng") Double swLng,
         @RequestParam("neLat") Double neLat,
-        @RequestParam("neLng") Double neLng
+        @RequestParam("neLng") Double neLng,
+        @RequestParam(value="type", required=false) String type,         // APT/SH/OFFI
+        @RequestParam(value="rentType", required=false) String rentType, // 전세/월세
+        @RequestParam(value="areaMin", required=false) Double areaMin,   // ㎡ 기준
+        @RequestParam(value="areaMax", required=false) Double areaMax    // ㎡ 기준
     ) {
-        return complexRepository.findByLatitudeBetweenAndLongitudeBetween(
-            swLat, neLat, swLng, neLng
+        return complexRepository.findInBoundsWithFilters(
+            swLat, swLng, neLat, neLng, type, rentType, areaMin, areaMax
         );
     }
     

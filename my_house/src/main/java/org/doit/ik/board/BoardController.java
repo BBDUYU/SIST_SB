@@ -84,12 +84,11 @@ public class BoardController {
 
     @PostMapping("/board/write")
     public String writeSubmit(@ModelAttribute("dto") BoardDTO dto, Principal principal) {
-        if (principal == null) {
-            return "redirect:/oauth2/authorization/kakao"; 
-        }
 
-        User writer = userRepository.findByEmail(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + principal.getName()));
+        User writer = currentUser(principal);
+        if (writer == null) {
+            return "redirect:/oauth2/authorization/kakao";
+        }
 
         Long id = boardService.create(dto, writer);
         return "redirect:/board/" + id;
