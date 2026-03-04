@@ -73,7 +73,7 @@ public class MyPageController {
         user.put("grade", loginUser.getRole());
         user.put("email", loginUser.getEmail());
         user.put("phone", loginUser.getPhone());
-        user.put("address", ""); // user 테이블에 주소 없으면 빈값
+        user.put("address", "");
         user.put("nickname", loginUser.getNickname());
         model.addAttribute("user", user);
 
@@ -83,17 +83,17 @@ public class MyPageController {
         long recentCnt = recentlyViewedRepository.countByUser_Uid(uid);
         long reviewCnt = reviewRepository.countByUser_UidAndDeletedAtIsNull(uid);
         long inquiryCnt = inquiryRepository.countByUser_UidAndDeletedFalse(uid);
-        long wishlistCnt = wishlistRepository.countByUser_Uid(uid); // ✅ 추가
+        long wishlistCnt = wishlistRepository.countByUser_Uid(uid);
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("recentView", recentCnt);
         stats.put("reviewCount", reviewCnt);
         stats.put("inquiryCount", inquiryCnt);
-        stats.put("wishlistCount", wishlistCnt); // ✅ 추가
+        stats.put("wishlistCount", wishlistCnt);
         model.addAttribute("stats", stats);
 
         // -----------------------
-        // 3) 최근본매물(properties) - (탭은 제거했지만, 기존 로직은 유지)
+        // 3) 최근본매물(properties)
         // -----------------------
         List<RecentlyViewed> recentRows =
                 recentlyViewedRepository.findTop4ByUser_UidOrderByViewedAtDesc(uid);
@@ -124,13 +124,29 @@ public class MyPageController {
         reviewStats.put("averageScore", avgScore);
         model.addAttribute("reviewStats", reviewStats);
 
+        // ✅ 변경: complex까지 같이 로딩되도록 repository 쪽에서 처리(아래 참고)
         List<Review> reviewRows =
                 reviewRepository.findByUser_UidAndDeletedAtIsNullOrderByCreatedAtDesc(uid);
 
         List<Map<String, Object>> reviews = new ArrayList<>();
         for (Review r : reviewRows) {
             Map<String, Object> row = new HashMap<>();
-            row.put("propertyName", "단지ID: " + (r.getComplex() != null ? r.getComplex().getCid() : ""));
+
+            // ✅ 변경: cid 대신 complex.full_name 표시
+            String fullName = null;
+            if (r.getComplex() != null) {
+                // Complex 엔티티에 fullName getter가 있어야 함 (컬럼 full_name 매핑)
+                fullName = r.getComplex().getFullName();
+            }
+
+            if (fullName == null || fullName.isBlank()) {
+                // fallback (혹시 full_name이 없으면 기존 cid라도 보이게)
+                Long cid = (r.getComplex() != null ? r.getComplex().getCid() : null);
+                row.put("propertyName", "단지ID: " + (cid != null ? cid : ""));
+            } else {
+                row.put("propertyName", fullName);
+            }
+
             row.put("rating", r.getRating());
             row.put("date", formatDate(r.getCreatedAt()));
             row.put("content", r.getContent());
