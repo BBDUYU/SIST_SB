@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import java.util.Map;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -63,21 +68,26 @@ public class BoardController {
 
     @GetMapping("/board/write")
     public String write(Model model, Principal principal) {
+
         model.addAttribute("isLogin", principal != null);
+
+        User me = currentUser(principal); // principal.getName()으로 email 조회하는 너 메서드
+        boolean isAdmin = (me != null && "ROLE_ADMIN".equals(me.getRole()));
+        model.addAttribute("isAdmin", isAdmin);
+
         model.addAttribute("formMode", "write");
         model.addAttribute("pageTitle", "새 글 쓰기");
         model.addAttribute("dto", new BoardDTO());
+
         return "board/form";
     }
 
     @PostMapping("/board/write")
     public String writeSubmit(@ModelAttribute("dto") BoardDTO dto, Principal principal) {
         if (principal == null) {
-            return "redirect:/oauth2/authorization/kakao"; // 너네 카카오 로그인 경로
+            return "redirect:/oauth2/authorization/kakao"; 
         }
 
-        // principal.getName() 이 로그에서 "user where email=?" 로 찍히는 거 보면
-        // 여기 값이 email로 들어오고 있는 상태임.
         User writer = userRepository.findByEmail(principal.getName())
             .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + principal.getName()));
 
@@ -128,7 +138,10 @@ public class BoardController {
     public String deleteReply(@PathVariable("postId") Long postId,
                               @PathVariable("replyId") Long replyId,
                               Principal principal) {
+
         User me = currentUser(principal);
+        if (me == null) return "redirect:/oauth2/authorization/kakao";
+
         boardService.deleteReply(postId, replyId, me);
         return "redirect:/board/" + postId;
     }
@@ -139,25 +152,57 @@ public class BoardController {
                            @RequestParam("content") String content,
                            Principal principal) {
 
-        if (principal == null) {
+        User me = currentUser(principal);
+        if (me == null) {
             return "redirect:/oauth2/authorization/kakao";
         }
 
-        User writer = userRepository.findByEmail(principal.getName())
-            .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + principal.getName()));
-
-        boardService.addReply(postId, content, writer);
+        boardService.addReply(postId, content, me);
         return "redirect:/board/" + postId;
     }
     
     // 유저
     private User currentUser(Principal principal) {
-        if (principal == null) return null;
-        return userRepository.findByEmail(principal.getName()).orElse(null);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+
+        Object p = auth.getPrincipal();
+
+        // 1) 일반 로그인(CustomUserDetails 등) → username(email)로 조회
+        if (p instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+            String email = ud.getUsername();
+            return userRepository.findByEmail(email).orElse(null);
+        }
+
+        // 2) OAuth2 로그인(카카오 등) → attributes에서 email 꺼내기
+        if (p instanceof OAuth2User ou) {
+            Object emailObj = ou.getAttribute("email"); // 구글은 보통 여기 있음
+            if (emailObj instanceof String email && !email.isBlank()) {
+                return userRepository.findByEmail(email).orElse(null);
+            }
+
+            // 카카오는 보통 kakao_account.email
+            Object ka = ou.getAttribute("kakao_account");
+            if (ka instanceof Map<?, ?> kakaoAccount) {
+                Object kEmail = kakaoAccount.get("email");
+                if (kEmail instanceof String email && !email.isBlank()) {
+                    return userRepository.findByEmail(email).orElse(null);
+                }
+            }
+
+            // 마지막 fallback: name이 email일 수도 있으니 한 번 더
+            String name = auth.getName();
+            return userRepository.findByEmail(name).orElse(null);
+        }
+
+        // 3) 기타 fallback
+        return userRepository.findByEmail(auth.getName()).orElse(null);
     }
 
     private boolean isAdmin(User u) {
-        return u != null && "ROLE_ADMIN".equals(u.getRole());
+        return u != null && "ROLE_ADMIN".equalsIgnoreCase(u.getRole());
     }
     
     // 삭제
