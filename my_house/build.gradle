@@ -64,6 +64,8 @@ dependencies {
 	implementation 'net.nurigo:sdk:4.3.0'
 	// 이메일 의존성
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 }
 
 tasks.named('test') {
