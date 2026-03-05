@@ -1,5 +1,6 @@
 package org.doit.ik.security;
 
+import org.doit.ik.admin.CustomAccessDeniedHandler;
 import org.doit.ik.security.oauth.CustomOAuth2UserService;
 import org.doit.ik.user.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +25,8 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomUserDetailsService customUserDetailsService;
-
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -129,6 +131,10 @@ public class SecurityConfig {
                 .permitAll()
             );
 
+        http.exceptionHandling(exception -> exception
+                .accessDeniedHandler(accessDeniedHandler)
+            );
+        
         // CSRF 설정
         http.csrf(csrf -> csrf
             .ignoringRequestMatchers(
