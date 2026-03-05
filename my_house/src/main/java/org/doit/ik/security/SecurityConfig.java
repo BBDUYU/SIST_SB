@@ -3,6 +3,7 @@ package org.doit.ik.security;
 import org.doit.ik.admin.CustomAccessDeniedHandler;
 import org.doit.ik.security.oauth.CustomOAuth2UserService;
 import org.doit.ik.user.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,7 +23,8 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
-
+	@Value("${spring.security.oauth2.client.registration.kakao.client-id}")
+    private String kakaoClientId;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomUserDetailsService customUserDetailsService;
     private final CustomAccessDeniedHandler accessDeniedHandler;
@@ -47,7 +49,7 @@ public class SecurityConfig {
         http
             .authenticationProvider(daoAuthenticationProvider)
             .authorizeHttpRequests(auth -> auth
-            		.requestMatchers(new AntPathRequestMatcher("/admin/**")).hasRole("ADMIN")
+            		.requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN")
                 .requestMatchers(
                 		
                     // 1. 누구나 접근 가능한 페이지 (Public)
@@ -114,22 +116,40 @@ public class SecurityConfig {
              // -----------------------------------------------------------
                 // ✅ 이 부분 추가: OAuth2 로그인 실패 시 로그를 남깁니다.
                 .failureHandler((request, response, exception) -> {
-                    System.out.println("!!!!! OAuth2 Login Failed !!!!!");
-                    System.out.println("Error Message: " + exception.getMessage());
-                    exception.printStackTrace(); // 전체 에러 스택트레이스 출력
-                    response.sendRedirect("/user/login?error");
+                    // 에러 메시지 추출
+                    String errorMessage = exception.getMessage(); 
+                    
+                    // 세션에 에러 메시지 저장 (한글 깨짐 방지 위해 인코딩하거나 세션 활용)
+                    request.getSession().setAttribute("LOGIN_ERROR_MSG", errorMessage);
+                    
+                    System.out.println("!!!!! OAuth2 Login Failed !!!!! : " + errorMessage);
+                    
+                    // 에러 파라미터를 붙여서 리다이렉트
+                    response.sendRedirect("/user/login?error=true");
                 })
                 // -----------------------------------------------------------
             )
 
             .logout(logout -> logout
-                .logoutUrl("/user/logout")
-                .logoutRequestMatcher(new AntPathRequestMatcher("/user/logout", "GET"))
-                .logoutSuccessUrl("/main")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-            );
+            	    .logoutUrl("/user/logout")
+            	    .logoutRequestMatcher(new AntPathRequestMatcher("/user/logout", "GET"))
+            	    .logoutSuccessHandler((request, response, authentication) -> {
+            	        // 1. 카카오 로그아웃 URL 생성 (카카오 세션까지 종료)
+            	        // client_id와 logout_redirect_uri가 중요합니다.
+            	        String clientId = kakaoClientId; 
+            	        String logoutRedirectUri = "http://localhost/main"; // 꼭 서버에 존재하는 매핑 주소여야 함!
+            	        
+            	        String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout" 
+            	                                + "?client_id=" + clientId 
+            	                                + "&logout_redirect_uri=" + logoutRedirectUri;
+            	        
+            	        // 2. 카카오 서버로 보내버림 (거기서 로그아웃 시키고 다시 우리 /main으로 보냄)
+            	        response.sendRedirect(kakaoLogoutUrl);
+            	    })
+            	    .invalidateHttpSession(true)
+            	    .deleteCookies("JSESSIONID")
+            	    .permitAll()
+            	);
 
         http.exceptionHandling(exception -> exception
                 .accessDeniedHandler(accessDeniedHandler)

@@ -1,6 +1,7 @@
 package org.doit.ik.user;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -37,8 +38,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String r = (role == null || role.isBlank()) ? "ROLE_USER" : role.trim();
-        return List.of(new SimpleGrantedAuthority(r));
+        String userRole = (this.role == null) ? "ROLE_USER" : this.role;
+        return Collections.singletonList(new SimpleGrantedAuthority(userRole));
     }
 
     @Override

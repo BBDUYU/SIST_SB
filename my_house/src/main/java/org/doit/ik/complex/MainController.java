@@ -84,7 +84,7 @@ public class MainController {
         return null;
     }
 
-    @GetMapping("/main")
+    @GetMapping({"/", "/main"})
     public String main(Model model, Principal principal) {
         model.addAttribute("isLogin", principal != null);
         model.addAttribute("kakaoJsKey", kakaoJsKey);

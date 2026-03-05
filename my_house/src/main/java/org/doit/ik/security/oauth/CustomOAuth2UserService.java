@@ -106,6 +106,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         userRepository.save(user);
 
+        String statusName = String.valueOf(user.getStatus());
+        if ("BANNED".equals(statusName)) {
+            System.out.println(">>> [SECURITY] 차단된 소셜 사용자 로그인 시도 차단: " + email);
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("account_banned"), 
+                "관리자에 의해 정지된 계정입니다."
+            );
+        }
+
+
         return new DefaultOAuth2User(
             Collections.singleton(new SimpleGrantedAuthority(user.getRole())),
             oauth2User.getAttributes(),
