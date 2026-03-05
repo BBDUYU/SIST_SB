@@ -133,21 +133,11 @@ public class SecurityConfig {
             .logout(logout -> logout
             	    .logoutUrl("/user/logout")
             	    .logoutRequestMatcher(new AntPathRequestMatcher("/user/logout", "GET"))
-            	    .logoutSuccessHandler((request, response, authentication) -> {
-            	        // 1. 카카오 로그아웃 URL 생성 (카카오 세션까지 종료)
-            	        // client_id와 logout_redirect_uri가 중요합니다.
-            	        String clientId = kakaoClientId; 
-            	        String logoutRedirectUri = "http://localhost/main"; // 꼭 서버에 존재하는 매핑 주소여야 함!
-            	        
-            	        String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout" 
-            	                                + "?client_id=" + clientId 
-            	                                + "&logout_redirect_uri=" + logoutRedirectUri;
-            	        
-            	        // 2. 카카오 서버로 보내버림 (거기서 로그아웃 시키고 다시 우리 /main으로 보냄)
-            	        response.sendRedirect(kakaoLogoutUrl);
-            	    })
-            	    .invalidateHttpSession(true)
-            	    .deleteCookies("JSESSIONID")
+            	    // ✅ 복잡한 핸들러 대신, 로그아웃 성공 시 바로 /main으로 이동
+            	    .logoutSuccessUrl("/main") 
+            	    .invalidateHttpSession(true) // 우리 서버 세션 삭제
+            	    .clearAuthentication(true)   // 인증 정보 삭제
+            	    .deleteCookies("JSESSIONID") // 쿠키 삭제
             	    .permitAll()
             	);
 
